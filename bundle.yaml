@@ -1,0 +1,15 @@
+bundle: kubernetes
+applications:
+  argo-controller:
+    charm: cs:argo-controller
+    source: ./operators/argo-controller
+    scale: 1
+  argo-ui:
+    charm: cs:argo-ui
+    source: ./operators/argo-ui
+    scale: 1
+  minio:
+    charm: cs:minio
+    scale: 1
+relations:
+- [argo-controller, minio]
