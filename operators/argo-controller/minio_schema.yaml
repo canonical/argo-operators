@@ -1,0 +1,10 @@
+type: object
+properties:
+  service:
+    type: string
+  port:
+    type: number
+  access-key:
+    type: string
+  secret-key:
+    type: string
