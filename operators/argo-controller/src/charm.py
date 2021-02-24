@@ -12,7 +12,7 @@ from ops.model import ActiveStatus, MaintenanceStatus, WaitingStatus, BlockedSta
 from ops.framework import StoredState
 
 from oci_image import OCIImageResource, OCIImageResourceError
-from require_interface import RequireAppInterface
+from charms.minio.v0.minio_interface import MinioRequire
 
 
 class ArgoControllerCharm(CharmBase):
@@ -23,7 +23,7 @@ class ArgoControllerCharm(CharmBase):
             self.model.unit.status = WaitingStatus('Waiting for leadership')
             return
         self.log = logging.getLogger(__name__)
-        self.minio = RequireAppInterface(self, "minio", "minio_schema.yaml")
+        self.minio = MinioRequire(self, "minio")
         self.image = OCIImageResource(self, 'oci-image')
         for event in [self.on.install,
                       self.on.leader_elected,
@@ -52,7 +52,7 @@ class ArgoControllerCharm(CharmBase):
 
         if not self.minio.is_available:
             self.log.info("Waiting for Minio data")
-            self.model.unit.status = MaintenanceStatus("Waiting for Minio")
+            self.model.unit.status = MaintenanceStatus("Waiting for Minio data")
             return
 
         minio_data = self.minio.data[0]
@@ -61,22 +61,6 @@ class ArgoControllerCharm(CharmBase):
         port = minio_data["port"]
         access_key = minio_data["access-key"]
         secret_key = minio_data["secret-key"]
-#        for relation in self.model.relations["minio"]:
-#            self.log.info("RELATION data: {}".format(relation.data))
-#            if not relation.app:
-#                self.log.info("Waiting for Minio: {}".format(self.model.relations))
-#                self.model.unit.status = BlockedStatus("Waiting for Minio")
-#                return
-#            service = relation.data[relation.app].get("service")
-#            port = relation.data[relation.app].get("port")
-#            access_key = relation.data[relation.app].get("access-key")
-#            secret_key = relation.data[relation.app].get("secret-key")
-#            if service is None:
-#                self.log.info("Waiting for Minio: {}".format(self.model.relations))
-#                self.model.unit.status = BlockedStatus("Waiting for Minio")
-#                return
-#            self.log.info("service: {} port: {} access-key: {} secret-key: {}".format(service,port,access_key,secret_key))
-
         crd = yaml.safe_load(Path("files/crd-v1alpha1.yaml").read_text())
 
         self.model.pod.set_spec({
