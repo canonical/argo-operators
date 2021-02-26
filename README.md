@@ -1,6 +1,13 @@
-Charmed Argo
+Argo Operators
 =============
 
-See https://argoproj.github.io
+# Overview
+This Repository includes the operators for [Argo](https://argoproj.github.io)
 
-TODO: MORE DOCS
+# Install
+
+To install the argo-operatorsm run:
+
+`juju deploy ./bundle.yaml`
+
+For more information, see https://juju.is/docs
