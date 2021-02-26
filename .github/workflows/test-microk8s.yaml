@@ -22,6 +22,7 @@ jobs:
       run: |
         set -eux
         sudo snap install charm --classic
+        sudo pip3 install charmcraft
         sudo snap install juju --classic
         sudo snap install juju-helpers --classic
         sudo snap install juju-wait --classic
