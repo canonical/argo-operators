@@ -46,12 +46,14 @@ class ArgoControllerCharm(CharmBase):
 
         if not self.minio.is_created:
             self.log.info("Waiting for Minio")
-            self.model.unit.status = BlockedStatus("Waiting for Minio")
+            self.model.unit.status = BlockedStatus("Waiting for MinIO relation")
             return
 
         if not self.minio.is_available:
             self.log.info("Waiting for Minio data")
-            self.model.unit.status = WaitingStatus("Waiting for Minio data")
+            self.model.unit.status = WaitingStatus(
+                "Waiting for MinIO connection information"
+            )
             return
 
         minio_data = self.minio.data[0]

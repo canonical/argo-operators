@@ -7,12 +7,6 @@ import yaml
 from charm import ArgoControllerCharm
 
 
-if yaml.__with_libyaml__:
-    _DefaultDumper = yaml.CSafeDumper
-else:
-    _DefaultDumper = yaml.SafeDumper
-
-
 @pytest.fixture
 def harness():
     return Harness(ArgoControllerCharm)
@@ -43,7 +37,7 @@ def test_main_no_relation(harness):
     pod_spec = harness.get_pod_spec()
 
     # confirm that we can serialize the pod spec
-    yaml.dump(pod_spec, Dumper=_DefaultDumper)
+    yaml.safe_dump(pod_spec)
 
     assert isinstance(harness.charm.model.unit.status, BlockedStatus)
 

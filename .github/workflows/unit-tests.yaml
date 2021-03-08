@@ -1,4 +1,4 @@
-name: Check Formatting
+name: Unit Tests 
 
 on:
   - push
@@ -6,7 +6,7 @@ on:
 
 jobs:
   lint:
-    name: Lint Code
+    name: Run Unit Tests
     runs-on: ubuntu-latest
 
     steps:
@@ -19,11 +19,7 @@ jobs:
     - name: Install black and tox
       run: |
         pip install tox
-        pip install black==20.8b1
-
-    - name: Check Black formatting
-      run: black --check .
 
     - name: Unit Tests and Linting
       run:
-        tox -e lint
+        tox -e unit
