@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import logging
-import os
 from pathlib import Path
 from base64 import b64encode
 import yaml
@@ -9,7 +8,6 @@ import yaml
 from ops.charm import CharmBase
 from ops.main import main
 from ops.model import ActiveStatus, MaintenanceStatus, WaitingStatus, BlockedStatus
-from ops.framework import StoredState
 
 from oci_image import OCIImageResource, OCIImageResourceError
 from charms.minio.v0.minio_interface import MinioRequire
@@ -48,12 +46,14 @@ class ArgoControllerCharm(CharmBase):
 
         if not self.minio.is_created:
             self.log.info("Waiting for Minio")
-            self.model.unit.status = BlockedStatus("Waiting for Minio")
+            self.model.unit.status = BlockedStatus("Waiting for MinIO relation")
             return
 
         if not self.minio.is_available:
             self.log.info("Waiting for Minio data")
-            self.model.unit.status = MaintenanceStatus("Waiting for Minio data")
+            self.model.unit.status = WaitingStatus(
+                "Waiting for MinIO connection information"
+            )
             return
 
         minio_data = self.minio.data[0]
@@ -121,7 +121,7 @@ class ArgoControllerCharm(CharmBase):
                         "imageDetails": image_details,
                         "imagePullPolicy": "Always",
                         "args": ["--configmap", "argo-controller-configmap-config"],
-                        "envConfig": {"ARGO_NAMESPACE": os.environ["JUJU_MODEL_NAME"]},
+                        "envConfig": {"ARGO_NAMESPACE": self.model.name},
                         "volumeConfig": [
                             {
                                 "name": "configmap",
