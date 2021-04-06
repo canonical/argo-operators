@@ -2,6 +2,7 @@
 
 import logging
 from pathlib import Path
+from os import listdir
 from base64 import b64encode
 import yaml
 
@@ -62,7 +63,14 @@ class ArgoControllerCharm(CharmBase):
         port = minio_data["port"]
         access_key = minio_data["access-key"]
         secret_key = minio_data["secret-key"]
-        crd = yaml.safe_load(Path("files/crd-v1alpha1.yaml").read_text())
+
+        crd_paths = [
+            Path(f"files/{crd_file}")
+            for crd_file in listdir("files")
+            if Path(f"files/{crd_file}").is_file()
+        ]
+
+        crds = [yaml.safe_load(crd_path.read_text()) for crd_path in crd_paths]
 
         self.model.pod.set_spec(
             {
@@ -121,7 +129,10 @@ class ArgoControllerCharm(CharmBase):
                         "imageDetails": image_details,
                         "imagePullPolicy": "Always",
                         "args": ["--configmap", "argo-controller-configmap-config"],
-                        "envConfig": {"ARGO_NAMESPACE": self.model.name},
+                        "envConfig": {
+                            "ARGO_NAMESPACE": self.model.name,
+                            "LEADER_ELECTION_IDENTITY": self.model.app.name,
+                        },
                         "volumeConfig": [
                             {
                                 "name": "configmap",
@@ -168,11 +179,8 @@ class ArgoControllerCharm(CharmBase):
                 ],
                 "kubernetesResources": {
                     "customResourceDefinitions": [
-                        {
-                            "name": crd["metadata"]["name"],
-                            "labels": {},
-                            "spec": crd["spec"],
-                        }
+                        {"name": crd["metadata"]["name"], "spec": crd["spec"]}
+                        for crd in crds
                     ],
                     "secrets": [
                         {

@@ -28,7 +28,7 @@ def test_main_no_relation(harness):
     harness.add_oci_resource(
         "oci-image",
         {
-            "registrypath": "argoproj/workflow-controller:v2.3.0",
+            "registrypath": "argoproj/workflow-controller:v3.0.1",
             "username": "",
             "password": "",
         },
@@ -47,7 +47,7 @@ def test_main_with_relation(harness):
     harness.add_oci_resource(
         "oci-image",
         {
-            "registrypath": "argoproj/workflow-controller:v2.3.0",
+            "registrypath": "argoproj/workflow-controller:v3.0.1",
             "username": "",
             "password": "",
         },
