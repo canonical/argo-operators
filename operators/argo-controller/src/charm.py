@@ -90,6 +90,7 @@ class ArgoControllerCharm(CharmBase):
                                         "watch",
                                         "update",
                                         "patch",
+                                        "delete",
                                     ],
                                 },
                                 {
@@ -100,7 +101,7 @@ class ArgoControllerCharm(CharmBase):
                                 {
                                     "apiGroups": [""],
                                     "resources": ["persistentvolumeclaims"],
-                                    "verbs": ["create", "delete"],
+                                    "verbs": ["create", "delete", "get"],
                                 },
                                 {
                                     "apiGroups": ["argoproj.io"],
@@ -111,7 +112,53 @@ class ArgoControllerCharm(CharmBase):
                                         "watch",
                                         "update",
                                         "patch",
+                                        "delete",
+                                        "create",
                                     ],
+                                },
+                                {
+                                    "apiGroups": ["argoproj.io"],
+                                    "resources": [
+                                        "workflowtemplates",
+                                        "workflowtemplates/finalizers",
+                                        "clusterworkflowtemplates",
+                                        "clusterworkflowtemplates/finalizers",
+                                    ],
+                                    "verbs": [
+                                        "get",
+                                        "list",
+                                        "watch",
+                                    ],
+                                },
+                                {
+                                    "apiGroups": [""],
+                                    "resources": ["serviceaccounts"],
+                                    "verbs": ["get", "list"],
+                                },
+                                {
+                                    "apiGroups": ["argoproj.io"],
+                                    "resources": [
+                                        "cronworkflows",
+                                        "cronworkflows/finalizers",
+                                    ],
+                                    "verbs": [
+                                        "get",
+                                        "list",
+                                        "watch",
+                                        "update",
+                                        "patch",
+                                        "delete",
+                                    ],
+                                },
+                                {
+                                    "apiGroups": [""],
+                                    "resources": ["events"],
+                                    "verbs": ["create", "patch"],
+                                },
+                                {
+                                    "apiGroups": ["policy"],
+                                    "resources": ["poddisruptionbudgets"],
+                                    "verbs": ["create", "get", "delete"],
                                 },
                             ],
                         }
