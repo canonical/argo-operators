@@ -1,17 +1,21 @@
 #!/usr/bin/env python3
 
 import logging
-from pathlib import Path
-from os import listdir
 from base64 import b64encode
-import yaml
+from os import listdir
+from pathlib import Path
 
+import yaml
 from ops.charm import CharmBase
 from ops.main import main
-from ops.model import ActiveStatus, MaintenanceStatus, WaitingStatus, BlockedStatus
+from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
 
 from oci_image import OCIImageResource, OCIImageResourceError
-from charms.minio.v0.minio_interface import MinioRequire
+from serialized_data_interface import (
+    NoCompatibleVersions,
+    NoVersionsListed,
+    get_interfaces,
+)
 
 
 class ArgoControllerCharm(CharmBase):
@@ -22,14 +26,23 @@ class ArgoControllerCharm(CharmBase):
             self.model.unit.status = WaitingStatus("Waiting for leadership")
             return
         self.log = logging.getLogger(__name__)
-        self.minio = MinioRequire(self, "minio")
+
+        try:
+            self.interfaces = get_interfaces(self)
+        except NoVersionsListed as err:
+            self.model.unit.status = WaitingStatus(str(err))
+            return
+        except NoCompatibleVersions as err:
+            self.model.unit.status = BlockedStatus(str(err))
+            return
+
         self.image = OCIImageResource(self, "oci-image")
         for event in [
             self.on.install,
             self.on.leader_elected,
             self.on.upgrade_charm,
             self.on.config_changed,
-            self.on.minio_relation_changed,
+            self.on["object-storage"].relation_changed,
         ]:
             self.framework.observe(event, self.main)
 
@@ -43,26 +56,36 @@ class ArgoControllerCharm(CharmBase):
 
         self.model.unit.status = MaintenanceStatus("Setting pod spec")
 
-        self.log.info("RELATIONS: {}".format(self.model.relations["minio"]))
+        self.log.info("RELATIONS: {}".format(self.model.relations["object-storage"]))
 
-        if not self.minio.is_created:
-            self.log.info("Waiting for Minio")
-            self.model.unit.status = BlockedStatus("Waiting for MinIO relation")
-            return
-
-        if not self.minio.is_available:
-            self.log.info("Waiting for Minio data")
+        if not ((os := self.interfaces["object-storage"]) and os.get_data()):
             self.model.unit.status = WaitingStatus(
-                "Waiting for MinIO connection information"
+                "Waiting for object-storage relation data"
             )
             return
+        os = list(os.get_data().values())[0]
 
-        minio_data = self.minio.data[0]
-
-        service = minio_data["service"]
-        port = minio_data["port"]
-        access_key = minio_data["access-key"]
-        secret_key = minio_data["secret-key"]
+        config_map = {
+            "executorImage": "argoproj/argoexec:v2.3.0",
+            "containerRuntimeExecutor": self.model.config["executor"],
+            "kubeletInsecure": self.model.config["kubelet-insecure"],
+            "artifactRepository": {
+                "s3": {
+                    "bucket": self.model.config["bucket"],
+                    "keyPrefix": self.model.config["key-prefix"],
+                    "endpoint": "{service}:{port}".format(**os),
+                    "insecure": not os["secure"],
+                    "accessKeySecret": {
+                        "name": "mlpipeline-minio-artifact",
+                        "key": "accesskey",
+                    },
+                    "secretKeySecret": {
+                        "name": "mlpipeline-minio-artifact",
+                        "key": "secretkey",
+                    },
+                }
+            },
+        }
 
         crd_paths = [
             Path(f"files/{crd_file}")
@@ -160,6 +183,16 @@ class ArgoControllerCharm(CharmBase):
                                     "resources": ["poddisruptionbudgets"],
                                     "verbs": ["create", "get", "delete"],
                                 },
+                                {
+                                    "apiGroups": ["coordination.k8s.io"],
+                                    "resources": ["leases"],
+                                    "verbs": ["create", "get", "update"],
+                                },
+                                {
+                                    "apiGroups": [""],
+                                    "resources": ["secrets"],
+                                    "verbs": ["get"],
+                                },
                             ],
                         }
                     ],
@@ -187,37 +220,7 @@ class ArgoControllerCharm(CharmBase):
                                 "files": [
                                     {
                                         "path": "config",
-                                        "content": yaml.dump(
-                                            {
-                                                "executorImage": "argoproj/argoexec:v2.3.0",
-                                                "containerRuntimeExecutor": self.model.config.get(
-                                                    "executor"
-                                                ),
-                                                "kubeletInsecure": self.model.config.get(
-                                                    "kubelet-insecure"
-                                                ),
-                                                "artifactRepository": {
-                                                    "s3": {
-                                                        "bucket": self.model.config.get(
-                                                            "bucket"
-                                                        ),
-                                                        "keyPrefix": self.model.config.get(
-                                                            "key-prefix"
-                                                        ),
-                                                        "endpoint": f"{service}:{port}",
-                                                        "insecure": True,
-                                                        "accessKeySecret": {
-                                                            "name": "mlpipeline-minio-artifact",
-                                                            "key": "accesskey",
-                                                        },
-                                                        "secretKeySecret": {
-                                                            "name": "mlpipeline-minio-artifact",
-                                                            "key": "secretkey",
-                                                        },
-                                                    }
-                                                },
-                                            }
-                                        ),
+                                        "content": yaml.dump(config_map),
                                     }
                                 ],
                             }
@@ -234,8 +237,12 @@ class ArgoControllerCharm(CharmBase):
                             "name": "mlpipeline-minio-artifact",
                             "type": "Opaque",
                             "data": {
-                                "accesskey": b64encode(access_key.encode("utf-8")),
-                                "secretkey": b64encode(secret_key.encode("utf-8")),
+                                "accesskey": b64encode(
+                                    os["access-key"].encode("utf-8")
+                                ),
+                                "secretkey": b64encode(
+                                    os["secret-key"].encode("utf-8")
+                                ),
                             },
                         }
                     ],

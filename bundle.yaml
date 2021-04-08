@@ -9,7 +9,7 @@ applications:
     source: ./operators/argo-server
     scale: 1
   minio:
-    charm: cs:~minio-charmers/minio
+    charm: cs:~minio-charmers/minio-13
     scale: 1
 relations:
 - [argo-controller, minio]
