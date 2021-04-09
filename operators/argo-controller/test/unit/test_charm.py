@@ -39,7 +39,7 @@ def test_main_no_relation(harness):
     # confirm that we can serialize the pod spec
     yaml.safe_dump(pod_spec)
 
-    assert isinstance(harness.charm.model.unit.status, BlockedStatus)
+    assert isinstance(harness.charm.model.unit.status, WaitingStatus)
 
 
 def test_main_with_relation(harness):
@@ -52,19 +52,22 @@ def test_main_with_relation(harness):
             "password": "",
         },
     )
-    rel_id = harness.add_relation("minio", "minio")
-    harness.begin_with_initial_hooks()
-    assert isinstance(harness.charm.model.unit.status, WaitingStatus)
+    rel_id = harness.add_relation("object-storage", "minio")
     harness.add_relation_unit(rel_id, "minio/0")
     data = {
         "service": "my-service",
         "port": 4242,
         "access-key": "my-access-key",
         "secret-key": "my-secret-key",
+        "secure": True,
     }
     harness.update_relation_data(
         rel_id,
         "minio",
-        {"data": yaml.dump(data)},
+        {
+            "data": yaml.dump(data),
+            "_supported_versions": yaml.dump(["v1"]),
+        },
     )
+    harness.begin_with_initial_hooks()
     assert isinstance(harness.charm.model.unit.status, ActiveStatus)
