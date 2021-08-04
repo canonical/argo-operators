@@ -3,7 +3,7 @@ name: Publish bundle to charm store
 on:
   push:
     branches:
-      - master
+      - main
 
 jobs:
   build:
