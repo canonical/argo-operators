@@ -27,6 +27,10 @@ jobs:
         sudo snap install juju-helpers --classic
         sudo snap install juju-wait --classic
 
+    # DEBUG
+    - name: Setup tmate interactive session
+      uses: mxschmitt/action-tmate@v3
+
     - name: Set up Argo
       run: |
         set -eux
