@@ -59,7 +59,7 @@ class ArgoControllerCharm(CharmBase):
         self.log.info("RELATIONS: {}".format(self.model.relations["object-storage"]))
 
         if not ((os := self.interfaces["object-storage"]) and os.get_data()):
-            self.model.unit.status = WaitingStatus(
+            self.model.unit.status = BlockedStatus(
                 "Waiting for object-storage relation data"
             )
             return
