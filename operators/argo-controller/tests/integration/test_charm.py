@@ -16,6 +16,7 @@ MINIO_CONFIG = {
     "secret-key": "minio-secret-key",
 }
 
+
 @pytest.mark.abort_on_fail
 async def test_build_and_deploy_with_relations(ops_test: OpsTest):
     built_charm_path = await ops_test.build_charm(CHARM_ROOT)
@@ -31,11 +32,10 @@ async def test_build_and_deploy_with_relations(ops_test: OpsTest):
     )
 
     # Deploy required relations
-    await ops_test.model.deploy(
-        entity_url="minio",
-        config=MINIO_CONFIG
+    await ops_test.model.deploy(entity_url="minio", config=MINIO_CONFIG)
+    await ops_test.model.add_relation(
+        f"{APP_NAME}:object-storage", "minio:object-storage"
     )
-    await ops_test.model.add_relation(f"{APP_NAME}:object-storage", "minio:object-storage")
 
     await ops_test.model.wait_for_idle(timeout=60 * 10)
     # TODO: This does not handle blocked status right.  Sometimes it passes when argo-controller
@@ -74,7 +74,7 @@ async def create_artifact_bucket(ops_test: OpsTest):
 
     ret_code, stdout, stderr = await ops_test.run(*kubectl_cmd)
     assert (
-            ret_code == 0
+        ret_code == 0
     ), f"kubectl command to create argo bucket returned code {ret_code} with stdout:\n{stdout}\nstderr:\n{stderr}"
 
 
@@ -89,7 +89,7 @@ async def submit_workflow_using_artifact(ops_test: OpsTest):
     )
     ret_code, stdout, stderr = await ops_test.run(*kubectl_cmd)
     assert (
-            ret_code == 0
+        ret_code == 0
     ), f"kubectl command to submit argo workflow returned code {ret_code} with stdout:\n{stdout}\nstderr:\n{stderr}"
 
     workflow_name = stdout.split()[0]
@@ -107,7 +107,7 @@ async def submit_workflow_using_artifact(ops_test: OpsTest):
     )
     ret_code, stdout, stderr = await ops_test.run(*kubectl_wait_cmd)
     assert (
-            ret_code == 0
+        ret_code == 0
     ), f"kubectl command to wait on argo workflow completion returned code {ret_code} with stdout:\n{stdout}\nstderr:\n{stderr}"
 
 
