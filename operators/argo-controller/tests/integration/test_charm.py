@@ -75,7 +75,8 @@ async def create_artifact_bucket(ops_test: OpsTest):
     ret_code, stdout, stderr = await ops_test.run(*kubectl_cmd)
     assert (
         ret_code == 0
-    ), f"kubectl command to create argo bucket returned code {ret_code} with stdout:\n{stdout}\nstderr:\n{stderr}"
+    ), f"kubectl command to create argo bucket returned code {ret_code} with " \
+       f"stdout:\n{stdout}\nstderr:\n{stderr}"
 
 
 async def submit_workflow_using_artifact(ops_test: OpsTest):
@@ -90,7 +91,8 @@ async def submit_workflow_using_artifact(ops_test: OpsTest):
     ret_code, stdout, stderr = await ops_test.run(*kubectl_cmd)
     assert (
         ret_code == 0
-    ), f"kubectl command to submit argo workflow returned code {ret_code} with stdout:\n{stdout}\nstderr:\n{stderr}"
+    ), f"kubectl command to submit argo workflow returned code {ret_code} with " \
+       f"stdout:\n{stdout}\nstderr:\n{stderr}"
 
     workflow_name = stdout.split()[0]
     log.info(f"Found workflow_name={workflow_name}")
@@ -108,7 +110,8 @@ async def submit_workflow_using_artifact(ops_test: OpsTest):
     ret_code, stdout, stderr = await ops_test.run(*kubectl_wait_cmd)
     assert (
         ret_code == 0
-    ), f"kubectl command to wait on argo workflow completion returned code {ret_code} with stdout:\n{stdout}\nstderr:\n{stderr}"
+    ), f"kubectl command to wait on argo workflow completion returned code {ret_code} with" \
+       f" stdout:\n{stdout}\nstderr:\n{stderr}"
 
 
 async def test_workflow_using_artifacts(ops_test: OpsTest):
