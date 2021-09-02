@@ -6,7 +6,7 @@ on:
 
 jobs:
   unit:
-    name: Run Unit/Lint Tests
+    name: Run Unit Tests
     runs-on: ubuntu-latest
     steps:
       - name: Check out repo
@@ -17,7 +17,7 @@ jobs:
       - run: tox -vve unit
 
   lint:
-    name: Run Unit/Lint Tests
+    name: Run Lint Tests
     runs-on: ubuntu-latest
     steps:
       - name: Check out repo
