@@ -25,4 +25,4 @@ jobs:
       - run: |
           sudo apt update
           sudo apt install tox
-      - run: tox -vve line
+      - run: tox -vve lint
