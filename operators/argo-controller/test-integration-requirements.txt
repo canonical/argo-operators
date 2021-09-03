@@ -1,0 +1,3 @@
+# Pull from github main branch until >0.8.2 is available in pypi
+# pytest-operator  # integration only.  Could be in separate requirements.txt
+https://github.com/charmed-kubernetes/pytest-operator/archive/refs/heads/main.zip
