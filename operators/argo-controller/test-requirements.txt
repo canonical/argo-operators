@@ -3,3 +3,4 @@ pytest
 # pytest-operator  # integration only.  Could be in separate requirements.txt
 https://github.com/charmed-kubernetes/pytest-operator/archive/refs/heads/main.zip
 pyyaml
+juju
