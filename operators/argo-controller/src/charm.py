@@ -87,10 +87,11 @@ class ArgoControllerCharm(CharmBase):
             },
         }
 
+        crd_root = "src/crds"
         crd_paths = [
-            Path(f"files/{crd_file}")
-            for crd_file in listdir("files")
-            if Path(f"files/{crd_file}").is_file()
+            Path(f"{crd_root}/{crd_file}")
+            for crd_file in listdir(crd_root)
+            if Path(f"{crd_root}/{crd_file}").is_file()
         ]
 
         crds = [yaml.safe_load(crd_path.read_text()) for crd_path in crd_paths]
