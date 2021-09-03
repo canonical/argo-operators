@@ -2,7 +2,7 @@
 
 import logging
 from base64 import b64encode
-from os import listdir
+from glob import glob
 from pathlib import Path
 
 import yaml
@@ -88,14 +88,7 @@ class ArgoControllerCharm(CharmBase):
         }
 
         crd_root = "src/crds"
-        crd_paths = [
-            Path(f"{crd_root}/{crd_file}")
-            for crd_file in listdir(crd_root)
-            if Path(f"{crd_root}/{crd_file}").is_file()
-        ]
-
-        crds = [yaml.safe_load(crd_path.read_text()) for crd_path in crd_paths]
-
+        crds = [yaml.safe_load(Path(f).read_text()) for f in glob(f"{crd_root}/*.yaml")]
         self.model.pod.set_spec(
             {
                 "version": 3,
