@@ -5,6 +5,34 @@ on:
   - pull_request
 
 jobs:
+  lint:
+    name: Lint Code
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        charm: [argo-controller, argo-server]
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v2
+      - run: |
+          sudo apt update
+          sudo apt install tox
+      - run: tox -vve ${{ matrix.charm }}-lint
+
+  unit:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        charm: [argo-controller, argo-server]
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v2
+      - run: |
+          sudo apt update
+          sudo apt install tox
+      - run: tox -vve ${{ matrix.charm }}-unit
+
   integration:
     name: Integration Test
     runs-on: ubuntu-latest
