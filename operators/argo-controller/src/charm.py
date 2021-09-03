@@ -65,8 +65,13 @@ class ArgoControllerCharm(CharmBase):
             return
         os = list(os.get_data().values())[0]
 
+        # Sync the argoproj/argoexec image to the same version
+        version = image_details["imagePath"].split(":")[-1]
+        executorImage = f"argoproj/argoexec:{version}"
+        self.log.info(f"using executorImage {executorImage}")
+
         config_map = {
-            "executorImage": "argoproj/argoexec:v2.3.0",
+            "executorImage": executorImage,
             "containerRuntimeExecutor": self.model.config["executor"],
             "kubeletInsecure": self.model.config["kubelet-insecure"],
             "artifactRepository": {
