@@ -39,7 +39,7 @@ def test_main_no_relation(harness):
     # confirm that we can serialize the pod spec
     yaml.safe_dump(pod_spec)
 
-    assert isinstance(harness.charm.model.unit.status, WaitingStatus)
+    assert isinstance(harness.charm.model.unit.status, BlockedStatus)
 
 
 def test_main_with_relation(harness):

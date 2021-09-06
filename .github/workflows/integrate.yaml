@@ -1,0 +1,82 @@
+name: CI
+
+on:
+  - push
+  - pull_request
+
+jobs:
+  lint:
+    name: Lint Code
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        charm: [argo-controller, argo-server]
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v2
+      - run: |
+          sudo apt update
+          sudo apt install tox
+      - run: tox -vve ${{ matrix.charm }}-lint
+
+  unit:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        charm: [argo-controller, argo-server]
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v2
+      - run: |
+          sudo apt update
+          sudo apt install tox
+      - run: tox -vve ${{ matrix.charm }}-unit
+
+  integration:
+    name: Integration Test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        charm: [argo-controller]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup operator environment
+        uses: charmed-kubernetes/actions-operator@main
+        with:
+          provider: microk8s
+
+      # TODO: Remove once the actions-operator does this automatically
+      - name: Configure kubectl
+        run: |
+          sg microk8s -c "microk8s config > ~/.kube/config"
+
+      - name: Build and test
+        working-directory: ./operators/${{ matrix.charm }}
+        run: |
+          sg microk8s -c "tox -vve integration -- --model testing"
+
+      # On failure, capture debugging resources
+      - name: Get all
+        run: kubectl get all -A
+        if: failure()
+
+      - name: Describe deployments
+        run: kubectl describe deployments -A
+        if: failure()
+
+      - name: Describe replicasets
+        run: kubectl describe replicasets -A
+        if: failure()
+
+      - name: Get juju status
+        run: juju status
+        if: failure()
+
+      - name: Get application logs
+        run: kubectl logs -n testing --tail 1000 -ljuju-app=${{ matrix.charm }}
+        if: failure()
+
+      - name: Get argo-controller operator logs
+        run: kubectl logs -n testing --tail 1000 -ljuju-operator=${{ matrix.charm }}
+        if: failure()

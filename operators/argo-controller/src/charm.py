@@ -2,7 +2,7 @@
 
 import logging
 from base64 import b64encode
-from os import listdir
+from glob import glob
 from pathlib import Path
 
 import yaml
@@ -59,7 +59,7 @@ class ArgoControllerCharm(CharmBase):
         self.log.info("RELATIONS: {}".format(self.model.relations["object-storage"]))
 
         if not ((os := self.interfaces["object-storage"]) and os.get_data()):
-            self.model.unit.status = WaitingStatus(
+            self.model.unit.status = BlockedStatus(
                 "Waiting for object-storage relation data"
             )
             return
@@ -87,14 +87,8 @@ class ArgoControllerCharm(CharmBase):
             },
         }
 
-        crd_paths = [
-            Path(f"files/{crd_file}")
-            for crd_file in listdir("files")
-            if Path(f"files/{crd_file}").is_file()
-        ]
-
-        crds = [yaml.safe_load(crd_path.read_text()) for crd_path in crd_paths]
-
+        crd_root = "src/crds"
+        crds = [yaml.safe_load(Path(f).read_text()) for f in glob(f"{crd_root}/*.yaml")]
         self.model.pod.set_spec(
             {
                 "version": 3,
