@@ -92,7 +92,7 @@ class ArgoControllerCharm(CharmBase):
             },
         }
 
-        crd_root = "src/crds"
+        crd_root = "files/crds"
         crds = [yaml.safe_load(Path(f).read_text()) for f in glob(f"{crd_root}/*.yaml")]
         self.model.pod.set_spec(
             {

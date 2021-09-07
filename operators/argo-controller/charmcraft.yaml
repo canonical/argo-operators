@@ -1,1 +1,12 @@
 type: charm
+parts:
+  crds:
+    plugin: dump
+    source: ../
+    source-type: local
+    prime:
+      - ./files/crds/argoproj.io_clusterworkflowtemplates.yaml
+      - ./files/crds/argoproj.io_cronworkflows.yaml
+      - ./files/crds/argoproj.io_workfloweventbindings.yaml
+      - ./files/crds/argoproj.io_workflows.yaml
+      - ./files/crds/argoproj.io_workflowtemplates.yaml
