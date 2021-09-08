@@ -65,8 +65,13 @@ class ArgoControllerCharm(CharmBase):
             return
         os = list(os.get_data().values())[0]
 
+        # Sync the argoproj/argoexec image to the same version
+        version = image_details["imagePath"].split(":")[-1]
+        executorImage = f"argoproj/argoexec:{version}"
+        self.log.info(f"using executorImage {executorImage}")
+
         config_map = {
-            "executorImage": "argoproj/argoexec:v2.3.0",
+            "executorImage": executorImage,
             "containerRuntimeExecutor": self.model.config["executor"],
             "kubeletInsecure": self.model.config["kubelet-insecure"],
             "artifactRepository": {
@@ -87,7 +92,7 @@ class ArgoControllerCharm(CharmBase):
             },
         }
 
-        crd_root = "src/crds"
+        crd_root = "files/crds"
         crds = [yaml.safe_load(Path(f).read_text()) for f in glob(f"{crd_root}/*.yaml")]
         self.model.pod.set_spec(
             {
