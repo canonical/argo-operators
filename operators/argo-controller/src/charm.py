@@ -67,18 +67,17 @@ class ArgoControllerCharm(CharmBase):
 
         # Sync the argoproj/argoexec image to the same version
         version = image_details["imagePath"].split(":")[-1]
-        executorImage = f"argoproj/argoexec:{version}"
-        self.log.info(f"using executorImage {executorImage}")
+        executor_image = f"argoproj/argoexec:{version}"
+        self.log.info(f"using executorImage {executor_image}")
 
         config_map = {
-            "executorImage": executorImage,
             "containerRuntimeExecutor": self.model.config["executor"],
             "kubeletInsecure": self.model.config["kubelet-insecure"],
             "artifactRepository": {
                 "s3": {
                     "bucket": self.model.config["bucket"],
-                    "keyPrefix": self.model.config["key-prefix"],
-                    "endpoint": "{service}:{port}".format(**os),
+                    "keyFormat": self.model.config["key-format"],
+                    "endpoint": f"{os['service']}.{os['namespace']}:{os['port']}",
                     "insecure": not os["secure"],
                     "accessKeySecret": {
                         "name": "mlpipeline-minio-artifact",
@@ -207,7 +206,12 @@ class ArgoControllerCharm(CharmBase):
                         "name": self.model.app.name,
                         "imageDetails": image_details,
                         "imagePullPolicy": "Always",
-                        "args": ["--configmap", "argo-controller-configmap-config"],
+                        "args": [
+                            "--configmap",
+                            "argo-controller-configmap-config",
+                            "--executor-image",
+                            executor_image,
+                        ],
                         "envConfig": {
                             "ARGO_NAMESPACE": self.model.name,
                             "LEADER_ELECTION_IDENTITY": self.model.app.name,
