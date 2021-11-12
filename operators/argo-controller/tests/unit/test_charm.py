@@ -60,6 +60,7 @@ def test_main_with_relation(harness):
         "access-key": "my-access-key",
         "secret-key": "my-secret-key",
         "secure": True,
+        "namespace": "my-namespace"
     }
     harness.update_relation_data(
         rel_id,
