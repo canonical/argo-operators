@@ -1,1 +1,4 @@
+# Copyright 2021 Canonical Ltd.
+# See LICENSE file for licensing details.
+
 pytest-operator > 0.8.2

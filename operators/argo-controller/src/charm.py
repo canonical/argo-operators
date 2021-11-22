@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright 2021 Canonical Ltd.
+# See LICENSE file for licensing details.
 
 import logging
 from base64 import b64encode
@@ -18,23 +20,22 @@ from serialized_data_interface import (
 )
 
 
+class CheckFailed(Exception):
+    """ Raise this exception if one of the checks in main fails. """
+
+    def __init__(self, msg, status_type=None):
+        super().__init__()
+
+        self.msg = msg
+        self.status_type = status_type
+        self.status = status_type(msg)
+
+
 class ArgoControllerCharm(CharmBase):
     def __init__(self, *args):
         super().__init__(*args)
-        if not self.unit.is_leader():
-            # We can't do anything useful when not the leader, so do nothing.
-            self.model.unit.status = WaitingStatus("Waiting for leadership")
-            return
-        self.log = logging.getLogger(__name__)
 
-        try:
-            self.interfaces = get_interfaces(self)
-        except NoVersionsListed as err:
-            self.model.unit.status = WaitingStatus(str(err))
-            return
-        except NoCompatibleVersions as err:
-            self.model.unit.status = BlockedStatus(str(err))
-            return
+        self.log = logging.getLogger(__name__)
 
         self.image = OCIImageResource(self, "oci-image")
         for event in [
@@ -48,22 +49,19 @@ class ArgoControllerCharm(CharmBase):
 
     def main(self, event):
         try:
-            image_details = self.image.fetch()
-        except OCIImageResourceError as e:
-            self.model.unit.status = e.status
-            self.log.info(e)
+            self._check_leader()
+
+            interfaces = self._get_interfaces()
+
+            image_details = self._check_image_details()
+
+            os = self._check_object_storage(interfaces)
+
+        except CheckFailed as check_failed:
+            self.model.unit.status = check_failed.status
             return
 
         self.model.unit.status = MaintenanceStatus("Setting pod spec")
-
-        self.log.info("RELATIONS: {}".format(self.model.relations["object-storage"]))
-
-        if not ((os := self.interfaces["object-storage"]) and os.get_data()):
-            self.model.unit.status = BlockedStatus(
-                "Waiting for object-storage relation data"
-            )
-            return
-        os = list(os.get_data().values())[0]
 
         # Sync the argoproj/argoexec image to the same version
         version = image_details["imagePath"].split(":")[-1]
@@ -254,6 +252,33 @@ class ArgoControllerCharm(CharmBase):
         )
 
         self.model.unit.status = ActiveStatus()
+
+    def _check_leader(self):
+        if not self.unit.is_leader():
+            # We can't do anything useful when not the leader, so do nothing.
+            raise CheckFailed("Waiting for leadership", WaitingStatus)
+
+    def _get_interfaces(self):
+        try:
+            interfaces = get_interfaces(self)
+        except NoVersionsListed as err:
+            raise CheckFailed(err, WaitingStatus)
+        except NoCompatibleVersions as err:
+            raise CheckFailed(err, BlockedStatus)
+        return interfaces
+
+    def _check_object_storage(self, interfaces):
+        if not ((os := interfaces["object-storage"]) and os.get_data()):
+            raise CheckFailed("Waiting for object-storage relation data", BlockedStatus)
+
+        return list(os.get_data().values())[0]
+
+    def _check_image_details(self):
+        try:
+            image_details = self.image.fetch()
+        except OCIImageResourceError as e:
+            raise CheckFailed(f"{e.status.message}", e.status_type)
+        return image_details
 
 
 if __name__ == "__main__":

@@ -1,3 +1,6 @@
+# Copyright 2021 Canonical Ltd.
+# See LICENSE file for licensing details.
+
 name: argo-server
 display-name: Argo Server
 summary: Container-Native Workflow Engine for Kubernetes

@@ -1,3 +1,6 @@
+# Copyright 2021 Canonical Ltd.
+# See LICENSE file for licensing details.
+
 name: argo-controller
 display-name: Argo Controller
 summary: Container-Native Workflow Engine for Kubernetes

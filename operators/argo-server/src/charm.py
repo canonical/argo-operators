@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright 2021 Canonical Ltd.
+# See LICENSE file for licensing details.
 
 import logging
 
@@ -9,15 +11,24 @@ from ops.model import ActiveStatus, MaintenanceStatus, WaitingStatus
 from oci_image import OCIImageResource, OCIImageResourceError
 
 
+class CheckFailed(Exception):
+    """ Raise this exception if one of the checks in main fails. """
+
+    def __init__(self, msg, status_type=None):
+        super().__init__()
+
+        self.msg = msg
+        self.status_type = status_type
+        self.status = status_type(msg)
+
+
 class Operator(CharmBase):
     def __init__(self, *args):
         super().__init__(*args)
-        if not self.unit.is_leader():
-            # We can't do anything useful when not the leader, so do nothing.
-            self.model.unit.status = WaitingStatus("Waiting for leadership")
-            return
+
         self.log = logging.getLogger(__name__)
         self.image = OCIImageResource(self, "oci-image")
+
         for event in [
             self.on.install,
             self.on.leader_elected,
@@ -28,10 +39,13 @@ class Operator(CharmBase):
 
     def main(self, event):
         try:
-            image_details = self.image.fetch()
-        except OCIImageResourceError as e:
-            self.model.unit.status = e.status
-            self.log.info(e)
+
+            self._check_leader()
+
+            image_details = self._check_image_details()
+
+        except CheckFailed as check_failed:
+            self.model.unit.status = check_failed.status
             return
 
         self.model.unit.status = MaintenanceStatus("Setting pod spec")
@@ -131,6 +145,18 @@ class Operator(CharmBase):
         )
 
         self.model.unit.status = ActiveStatus()
+
+    def _check_leader(self):
+        if not self.unit.is_leader():
+            # We can't do anything useful when not the leader, so do nothing.
+            raise CheckFailed("Waiting for leadership", WaitingStatus)
+
+    def _check_image_details(self):
+        try:
+            image_details = self.image.fetch()
+        except OCIImageResourceError as e:
+            raise CheckFailed(f"{e.status.message}", e.status_type)
+        return image_details
 
 
 if __name__ == "__main__":
