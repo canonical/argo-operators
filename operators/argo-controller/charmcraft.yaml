@@ -1,5 +1,13 @@
 type: charm
+bases:
+  - build-on:
+      - name: "ubuntu"
+        channel: "20.04"
+    run-on:
+      - name: "ubuntu"
+        channel: "20.04"
 parts:
   charm:
     prime:
       - ./files/crds/argoproj.io_*.yaml
+    charm-python-packages: [setuptools, pip]  # Fixes install of some packages

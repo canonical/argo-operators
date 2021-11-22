@@ -3,9 +3,9 @@ options:
     type: string
     default: mlpipeline
     description: S3 bucket name
-  key-prefix:
+  key-format:
     type: string
-    default: artifacts
+    default: "artifacts/{{workflow.name}}/{{workflow.creationTimestamp.Y}}/{{workflow.creationTimestamp.m}}/{{workflow.creationTimestamp.d}}/{{pod.name}}"
     description: S3 key prefix
   executor:
     type: string
