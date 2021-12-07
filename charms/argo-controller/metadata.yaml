@@ -1,12 +1,8 @@
 # Copyright 2021 Canonical Ltd.
 # See LICENSE file for licensing details.
-
 name: argo-controller
-display-name: Argo Controller
 summary: Container-Native Workflow Engine for Kubernetes
 description: Container-Native Workflow Engine for Kubernetes
-maintainers: [Juju Developers <juju@lists.ubuntu.com>]
-tags: [ai, bigdata, kubeflow, machine-learning, tensorflow]
 series: [kubernetes]
 resources:
   oci-image:
@@ -22,4 +18,3 @@ requires:
 deployment:
   type: stateless
   service: omit
-min-juju-version: 2.8.6

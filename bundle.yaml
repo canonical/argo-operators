@@ -2,17 +2,21 @@
 # See LICENSE file for licensing details.
 
 bundle: kubernetes
+name: argo-workflows
 applications:
   argo-controller:
-    charm: cs:argo-controller
+    charm: ch:argo-controller
+    channel: latest/edge
     source: ./operators/argo-controller
     scale: 1
   argo-server:
-    charm: cs:argo-server
+    charm: ch:argo-server
+    channel: latest/edge
     source: ./operators/argo-server
     scale: 1
   minio:
-    charm: cs:~minio-charmers/minio-13
+    charm: ch:minio
+    channel: latest/edge
     scale: 1
 relations:
 - [argo-controller, minio]
