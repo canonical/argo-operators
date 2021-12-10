@@ -56,7 +56,7 @@ jobs:
           sg microk8s -c "microk8s config > ~/.kube/config"
 
       - name: Build and test
-        working-directory: ./operators/${{ matrix.charm }}
+        working-directory: ./charms/${{ matrix.charm }}
         run: |
           sg microk8s -c "tox -vve integration -- --model testing"
 
