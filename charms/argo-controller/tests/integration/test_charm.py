@@ -44,6 +44,9 @@ async def test_build_and_deploy_with_relations(ops_test: OpsTest):
     # TODO: This does not handle blocked status right.  Sometimes it passes when argo-controller
     #  is still setting up
 
+    # The unit should be active before creating/testing resources
+    await ops_test.model.wait_for_idle(apps=[APP_NAME], status="active", timeout=1000)
+
 
 async def create_artifact_bucket(ops_test: OpsTest):
     # Ensure bucket is available
