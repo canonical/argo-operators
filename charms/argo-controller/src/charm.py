@@ -64,7 +64,8 @@ class ArgoControllerCharm(CharmBase):
         self.model.unit.status = MaintenanceStatus("Setting pod spec")
 
         # Sync the argoproj/argoexec image to the same version
-        version = image_details["imagePath"].split(":")[-1]
+        metadata = yaml.safe_load(Path("metadata.yaml").read_bytes())
+        version = metadata["resources"]["oci-image"]["upstream-source"].split(":")[-1]
         executor_image = f"argoproj/argoexec:{version}"
         self.log.info(f"using executorImage {executor_image}")
 
