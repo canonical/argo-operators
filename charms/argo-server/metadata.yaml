@@ -9,7 +9,7 @@ resources:
     type: oci-image
     description: 'Backing OCI image'
     auto-fetch: true
-    upstream-source: argoproj/argocli:v3.0.1
+    upstream-source: argoproj/argocli:v3.1.8
 deployment:
   type: stateless
   service: omit
