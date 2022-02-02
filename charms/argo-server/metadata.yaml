@@ -3,13 +3,21 @@
 name: argo-server
 summary: Container-Native Workflow Engine for Kubernetes
 description: Container-Native Workflow Engine for Kubernetes
-series: [kubernetes]
+
+containers:
+  argo-server:
+    resource: argo-server-image
+    mounts:
+      - storage: tmp
+        location: /tmp
+
 resources:
-  oci-image:
+  argo-server-image:
     type: oci-image
     description: 'Backing OCI image'
-    auto-fetch: true
-    upstream-source: argoproj/argocli:v3.0.1
-deployment:
-  type: stateless
-  service: omit
+    upstream-source: argoproj/argocli:v3.1.8
+
+storage:
+  tmp:
+    type: filesystem
+    location: /tmp
