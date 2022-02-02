@@ -42,12 +42,14 @@ class ArgoServerOperatorCharm(CharmBase):
 
         self.framework.observe(self.on.install, self._on_install)
         self.framework.observe(self.on.config_changed, self._on_config_changed)
-        self.framework.observe(self.on.leader_elected, self._on_config_changed)
-        self.framework.observe(self.on.upgrade_charm, self._on_config_changed)
         self.framework.observe(
             self.on.argo_server_pebble_ready,
             self._argo_server_pebble_ready
         )
+        
+        # NOTE previous podspec had these events mapped to the podspec declaration
+        # self.framework.observe(self.on.leader_elected, self._on_config_changed)
+        # self.framework.observe(self.on.upgrade_charm, self._on_config_changed)
 
     def _argo_server_layer(self) -> Layer:
         """Returns a Pebble configuration layer for Argo Server"""
