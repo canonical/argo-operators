@@ -46,7 +46,7 @@ class ArgoServerOperatorCharm(CharmBase):
             self.on.argo_server_pebble_ready,
             self._argo_server_pebble_ready
         )
-        
+
         # NOTE previous podspec had these events mapped to the podspec declaration
         # self.framework.observe(self.on.leader_elected, self._on_config_changed)
         # self.framework.observe(self.on.upgrade_charm, self._on_config_changed)
@@ -84,7 +84,7 @@ class ArgoServerOperatorCharm(CharmBase):
                     type(obj), obj.metadata.name, obj, patch_type=PatchType.MERGE
                 )
 
-    def _update_layer(self):
+    def _update_layer(self) -> None:
         """Update Pebble layer if changed"""
         if not self._container.can_connect():
             self.unit.status = WaitingStatus("Waiting for Pebble in workload container")

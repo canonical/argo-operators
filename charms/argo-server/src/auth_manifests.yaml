@@ -1,9 +1,7 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  labels:
-    app: {{ app_name }}
-  name: {{ namespace }}-{{ app_name }}-charm
+  name: {{ app_name }}-cluster-role
 rules:
   - apiGroups:
     - ""
@@ -68,13 +66,11 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  labels:
-    app: {{ app_name }}
-  name: {{ namespace }}-{{ app_name }}-charm
+  name: {{ app_name }}-binding
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: {{ namespace }}-{{ app_name }}-charm
+  name: {{ app_name }}-cluster-role
 subjects:
 - kind: ServiceAccount
   name: {{ app_name }}
