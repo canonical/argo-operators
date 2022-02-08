@@ -11,6 +11,9 @@ from ops.pebble import Layer
 from ops.model import ActiveStatus, MaintenanceStatus, WaitingStatus, BlockedStatus
 from lightkube import ApiError, Client, codecs
 from lightkube.types import PatchType
+from lightkube.resources.apps_v1 import StatefulSet
+
+from charms.observability_libs.v0.kubernetes_service_patch import KubernetesServicePatch
 
 
 class CheckFailed(Exception):
@@ -29,7 +32,6 @@ class ArgoServerOperatorCharm(CharmBase):
         super().__init__(*args)
 
         self.log = logging.getLogger(__name__)
-        # self.image = OCIImageResource(self, "oci-image")
 
         self._name = self.model.app.name
         self._namespace = self.model.name
@@ -39,6 +41,8 @@ class ArgoServerOperatorCharm(CharmBase):
         self._resource_files = {
             "auth": "auth_manifests.yaml"
         }
+        # Creates a service to expose argo-server dashboard port
+        self._service_patcher = KubernetesServicePatch(self, [("web", self.config["port"], 2746)])
 
         self.framework.observe(self.on.install, self._on_install)
         self.framework.observe(self.on.config_changed, self._on_config_changed)
@@ -53,7 +57,6 @@ class ArgoServerOperatorCharm(CharmBase):
 
     def _argo_server_layer(self) -> Layer:
         """Returns a Pebble configuration layer for Argo Server"""
-
         layer_config = {
             "summary": "argo server layer",
             "description": "pebble config layer for argo server",
@@ -84,6 +87,21 @@ class ArgoServerOperatorCharm(CharmBase):
                     type(obj), obj.metadata.name, obj, patch_type=PatchType.MERGE
                 )
 
+    def _patch_security_context(self):
+        """Patch the security context
+        TODO Not working at the moment
+        """
+        client = Client()
+        pod_spec = client.get(StatefulSet, name=self._name, namespace=self._namespace)
+
+        # NOTE This is how the runAsNonRoot is specified, but clashes with other containers
+        # on the pod like the init-container
+        pod_spec.spec.template.spec.securityContext.runAsNonRoot = True
+
+        # NOTE Applying the same parameter to the argo-server container also generates an error
+        # pod_spec.spec.template.spec.containers[1].securityContext.runAsNonRoot = True
+        client.patch(StatefulSet, self._name, pod_spec, patch_type=PatchType.MERGE)
+
     def _update_layer(self) -> None:
         """Update Pebble layer if changed"""
         if not self._container.can_connect():
@@ -106,13 +124,11 @@ class ArgoServerOperatorCharm(CharmBase):
 
     def _argo_server_pebble_ready(self, event):
         """Handle the pebble-ready event"""
-
         # Update Pebble configuration layer
         self._update_layer()
 
     def _on_install(self, event):
         """Handle the intall-event"""
-
         # Update Pebble configuration layer
         self._update_layer()
 
@@ -131,7 +147,6 @@ class ArgoServerOperatorCharm(CharmBase):
 
     def _on_config_changed(self, event):
         """Handle the config-changed event"""
-
         # Update Pebble configuration layer
         self._update_layer()
 
@@ -140,6 +155,10 @@ class ArgoServerOperatorCharm(CharmBase):
             self.unit.status = MaintenanceStatus("Patching auth resources")
             self._patch_resource(resource_type="auth", context=self._context)
             self.log.info("Patched Kubernetes resources")
+
+            # self._patch_security_context()
+            # self.log.info("Patched Kubernetes securityContext")
+
         except ApiError as e:
             self.log.error(e)
             self.unit.status = BlockedStatus(
@@ -148,6 +167,10 @@ class ArgoServerOperatorCharm(CharmBase):
         else:
             self.unit.status = ActiveStatus()
 
+    def _check_leader(self):
+        if not self.unit.is_leader():
+            # We can't do anything useful when not the leader, so do nothing.
+            raise CheckFailed("Waiting for leadership", WaitingStatus)
 
 ############ PREVIOUS PODSPEC CONFIG ############
 #     try:
@@ -254,11 +277,6 @@ class ArgoServerOperatorCharm(CharmBase):
 #         }
 #     )
 #################################################
-
-    def _check_leader(self):
-        if not self.unit.is_leader():
-            # We can't do anything useful when not the leader, so do nothing.
-            raise CheckFailed("Waiting for leadership", WaitingStatus)
 
 
 if __name__ == "__main__":
