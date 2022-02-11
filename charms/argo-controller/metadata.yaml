@@ -3,6 +3,7 @@
 name: argo-controller
 summary: Container-Native Workflow Engine for Kubernetes
 description: Container-Native Workflow Engine for Kubernetes
+min-juju-version: "2.9.0"
 series: [kubernetes]
 resources:
   oci-image:
