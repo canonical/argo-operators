@@ -11,7 +11,7 @@ from ops.pebble import Layer
 from ops.model import ActiveStatus, MaintenanceStatus, WaitingStatus, BlockedStatus
 from lightkube import ApiError, Client, codecs
 from lightkube.types import PatchType
-from lightkube.resources.apps_v1 import StatefulSet
+from lightkube.resources.rbac_authorization_v1 import ClusterRole, ClusterRoleBinding
 
 from charms.observability_libs.v0.kubernetes_service_patch import KubernetesServicePatch
 
@@ -46,14 +46,13 @@ class ArgoServerOperatorCharm(CharmBase):
 
         self.framework.observe(self.on.install, self._on_install)
         self.framework.observe(self.on.config_changed, self._on_config_changed)
+        self.framework.observe(self.on.leader_elected, self._on_config_changed)
+        self.framework.observe(self.on.upgrade_charm, self._on_config_changed)
         self.framework.observe(
             self.on.argo_server_pebble_ready,
             self._argo_server_pebble_ready
         )
-
-        # NOTE previous podspec had these events mapped to the podspec declaration
-        # self.framework.observe(self.on.leader_elected, self._on_config_changed)
-        # self.framework.observe(self.on.upgrade_charm, self._on_config_changed)
+        self.framework.observe(self.on.remove, self._on_remove)
 
     def _on_install(self, _):
         """Handle the intall-event"""
@@ -72,14 +71,14 @@ class ArgoServerOperatorCharm(CharmBase):
             self._create_resource(resource_type="auth", context=self._context)
             self.log.info("Created Kubernetes resources")
         except ApiError as e:
-            self.log.error(e)
+            self.log.error("On install, creating resources failed: {}".format(e))
             self.unit.status = BlockedStatus(
                 f"Creating resources failed with code {str(e.status.code)}."
             )
         else:
             self.unit.status = ActiveStatus()
 
-    def _on_config_changed(self, event):
+    def _on_config_changed(self, _):
         """Handle the config-changed event"""
         try:
             self._check_leader()
@@ -96,9 +95,6 @@ class ArgoServerOperatorCharm(CharmBase):
             self._patch_resource(resource_type="auth", context=self._context)
             self.log.info("Patched Kubernetes resources")
 
-            # self._patch_security_context()
-            # self.log.info("Patched Kubernetes securityContext")
-
         except ApiError as e:
             self.log.error(e)
             self.unit.status = BlockedStatus(
@@ -111,6 +107,20 @@ class ArgoServerOperatorCharm(CharmBase):
         """Handle the pebble-ready event"""
         # Update Pebble configuration layer
         self._update_layer()
+
+    def _on_remove(self, _):
+        """Handle the remove event"""
+        try:
+            self.unit.status = MaintenanceStatus("Deleting auth resources")
+            # Destroy the created resources
+            self._delete_resources()
+        except ApiError as e:
+            self.log.error("On remove, deleting resources failed: {}".format(e))
+            self.unit.status = BlockedStatus(
+                f"Deleting resources failed with code {str(e.status.code)}."
+            )
+        else:
+            self.unit.status = ActiveStatus()
 
     def _update_layer(self) -> None:
         """Update Pebble layer if changed"""
@@ -141,7 +151,7 @@ class ArgoServerOperatorCharm(CharmBase):
                 "argo-server": {
                     "override": "replace",
                     "summary": "argo server dashboard",
-                    "command": "argo server",
+                    "command": "argo server --auth-mode {}".format(self.config["auth-mode"]),
                     "startup": "enabled"
                 }
             },
@@ -164,20 +174,12 @@ class ArgoServerOperatorCharm(CharmBase):
                     type(obj), obj.metadata.name, obj, patch_type=PatchType.MERGE
                 )
 
-    def _patch_security_context(self):
-        """Patch the security context
-        TODO Not working at the moment
-        """
+    def _delete_resources(self) -> None:
+        """Deletes kubernetes resources"""
         client = Client()
-        pod_spec = client.get(StatefulSet, name=self._name, namespace=self._namespace)
-
-        # NOTE This is how the runAsNonRoot is specified, but clashes with other containers
-        # on the pod like the init-container
-        pod_spec.spec.template.spec.securityContext.runAsNonRoot = True
-
-        # NOTE Applying the same parameter to the argo-server container also generates an error
-        # pod_spec.spec.template.spec.containers[1].securityContext.runAsNonRoot = True
-        client.patch(StatefulSet, self._name, pod_spec, patch_type=PatchType.MERGE)
+        self.log.info("Deleting roles from model")
+        client.delete(ClusterRoleBinding, name=f"{self._name}-binding", namespace=self._namespace)
+        client.delete(ClusterRole, name=f"{self._name}-cluster-role", namespace=self._namespace)
 
     def _check_leader(self):
         if not self.unit.is_leader():
