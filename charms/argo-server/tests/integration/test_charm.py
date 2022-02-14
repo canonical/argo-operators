@@ -24,7 +24,7 @@ async def test_build_and_deploy(ops_test: OpsTest):
     """
     # build and deploy charm from local source folder
     charm = await ops_test.build_charm(".")
-    resources = {"argo-server-image": METADATA["resources"]["argo-server-image"]["upstream-source"]}
+    resources = {"oci-image": METADATA["resources"]["oci-image"]["upstream-source"]}
     await ops_test.model.deploy(charm, resources=resources, application_name=APP_NAME)
 
     await ops_test.model.wait_for_idle(

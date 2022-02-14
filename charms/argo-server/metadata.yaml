@@ -6,13 +6,13 @@ description: Container-Native Workflow Engine for Kubernetes
 
 containers:
   argo-server:
-    resource: argo-server-image
+    resource: oci-image
     mounts:
       - storage: tmp
         location: /tmp
 
 resources:
-  argo-server-image:
+  oci-image:
     type: oci-image
     description: 'Backing OCI image'
     upstream-source: argoproj/argocli:v3.1.8

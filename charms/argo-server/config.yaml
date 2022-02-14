@@ -6,3 +6,7 @@ options:
     type: int
     default: 2746
     description: Argo Server port
+  auth-mode:
+    type: string
+    default: server
+    description: Argo server
