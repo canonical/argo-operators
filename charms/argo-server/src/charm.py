@@ -127,8 +127,14 @@ class ArgoServerOperatorCharm(CharmBase):
         # Update Pebble configuration layer
         self._update_layer()
 
-    def _on_install(self, event):
+    def _on_install(self, _):
         """Handle the intall-event"""
+        try:
+            self._check_leader()
+        except CheckFailed as check_failed:
+            self.model.unit.status = check_failed.status
+            return
+
         # Update Pebble configuration layer
         self._update_layer()
 
@@ -147,6 +153,12 @@ class ArgoServerOperatorCharm(CharmBase):
 
     def _on_config_changed(self, event):
         """Handle the config-changed event"""
+        try:
+            self._check_leader()
+        except CheckFailed as check_failed:
+            self.model.unit.status = check_failed.status
+            return
+
         # Update Pebble configuration layer
         self._update_layer()
 
