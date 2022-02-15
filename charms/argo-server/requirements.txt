@@ -4,3 +4,4 @@
 ops==1.3.0
 lightkube<=0.8.1
 lightkube-models
+jinja2

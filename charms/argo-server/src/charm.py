@@ -16,17 +16,6 @@ from lightkube.resources.rbac_authorization_v1 import ClusterRole, ClusterRoleBi
 from charms.observability_libs.v0.kubernetes_service_patch import KubernetesServicePatch
 
 
-class CheckFailed(Exception):
-    """ Raise this exception if one of the checks in main fails. """
-
-    def __init__(self, msg, status_type=None):
-        super().__init__()
-
-        self.msg = msg
-        self.status_type = status_type
-        self.status = status_type(msg)
-
-
 class ArgoServerOperatorCharm(CharmBase):
     def __init__(self, *args):
         super().__init__(*args)
@@ -56,10 +45,8 @@ class ArgoServerOperatorCharm(CharmBase):
 
     def _on_install(self, _):
         """Handle the intall-event"""
-        try:
-            self._check_leader()
-        except CheckFailed as check_failed:
-            self.model.unit.status = check_failed.status
+        if not self.unit.is_leader():
+            self.unit.status = WaitingStatus("Waiting for leadership")
             return
 
         # Update Pebble configuration layer
@@ -80,10 +67,8 @@ class ArgoServerOperatorCharm(CharmBase):
 
     def _on_config_changed(self, _):
         """Handle the config-changed event"""
-        try:
-            self._check_leader()
-        except CheckFailed as check_failed:
-            self.model.unit.status = check_failed.status
+        if not self.unit.is_leader():
+            self.unit.status = WaitingStatus("Waiting for leadership")
             return
 
         # Update Pebble configuration layer
@@ -180,11 +165,6 @@ class ArgoServerOperatorCharm(CharmBase):
         self.log.info("Deleting roles from model")
         client.delete(ClusterRoleBinding, name=f"{self._name}-binding", namespace=self._namespace)
         client.delete(ClusterRole, name=f"{self._name}-cluster-role", namespace=self._namespace)
-
-    def _check_leader(self):
-        if not self.unit.is_leader():
-            # We can't do anything useful when not the leader, so do nothing.
-            raise CheckFailed("Waiting for leadership", WaitingStatus)
 
 
 if __name__ == "__main__":

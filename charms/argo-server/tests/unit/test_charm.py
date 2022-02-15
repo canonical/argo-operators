@@ -1,22 +1,23 @@
 #!/usr/bin/env python3
 # Copyright 2021 Canonical Ltd.
 # See LICENSE file for licensing details.
-#
-# Learn more about testing at: https://juju.is/docs/sdk/testing
 
 import logging
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 
 from ops.model import ActiveStatus, BlockedStatus, WaitingStatus
 from ops.testing import Harness
+from lightkube.core.exceptions import ApiError
 
 from charm import ArgoServerOperatorCharm
+from tests.unit.helpers import _FakeApiError
 
 
 logger = logging.getLogger(__name__)
 
 
+@patch("lightkube.core.client.GenericSyncClient", Mock)
 class TestCharm(unittest.TestCase):
 
     @patch("charm.KubernetesServicePatch", lambda x, y: None)
@@ -27,19 +28,21 @@ class TestCharm(unittest.TestCase):
 
     @patch("charm.ArgoServerOperatorCharm._create_resource")
     def test_on_install(self, create_resource):
-        """"""
+        """Test install event"""
+        self.harness.set_leader(True)
         self.harness.charm.on.install.emit()
 
-        create_resource.assert_called_once()
+        create_resource.assert_called()
         # Check status is Active
         self.assertEqual(self.harness.charm.unit.status, ActiveStatus())
 
     @patch("charm.ArgoServerOperatorCharm._patch_resource")
     def test_on_config_changed(self, patch_resource):
-        """"""
+        """Test config_changed event"""
+        self.harness.set_leader(True)
         self.harness.charm.on.config_changed.emit()
 
-        patch_resource.assert_called_once()
+        patch_resource.assert_called()
         # Check status is Active
         self.assertEqual(self.harness.charm.unit.status, ActiveStatus())
 
@@ -71,3 +74,26 @@ class TestCharm(unittest.TestCase):
         self.assertTrue(service.is_running())
         # Ensure we set an ActiveStatus with no message
         self.assertEqual(self.harness.model.unit.status, ActiveStatus())
+
+    @patch("charm.ApiError", _FakeApiError)
+    @patch("charm.ArgoServerOperatorCharm._create_resource")
+    def test_blocked_on_install(self, create_resource):
+        """Test unit status is blocked when failed to create resources"""
+        self.harness.set_leader(True)
+        create_resource.side_effect = _FakeApiError()
+        try:
+            self.harness.charm.on.install.emit()
+        except ApiError:
+            self.assertEqual(
+                self.harness.charm.unit.status,
+                BlockedStatus(
+                    "Creating resources failed with code "
+                    f"{create_resource.side_effect.response.code}."
+                ),
+            )
+
+    def test_status_with_no_leader(self):
+        """Test that check_leader raises an exception when the the unit is not the leader"""
+        # Change the leadership status, triggering the event
+        self.harness.charm.on.install.emit()
+        self.assertEqual(self.harness.model.unit.status, WaitingStatus("Waiting for leadership"))
