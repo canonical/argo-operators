@@ -2,21 +2,24 @@
 # Copyright 2021 Canonical Ltd.
 # See LICENSE file for licensing details.
 
+"""Argo Server charm for Kubernetes."""
+
 import logging
 from pathlib import Path
 
+from charms.observability_libs.v0.kubernetes_service_patch import KubernetesServicePatch
+from lightkube import ApiError, Client, codecs
+from lightkube.resources.rbac_authorization_v1 import ClusterRole, ClusterRoleBinding
+from lightkube.types import PatchType
 from ops.charm import CharmBase
 from ops.main import main
+from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
 from ops.pebble import Layer
-from ops.model import ActiveStatus, MaintenanceStatus, WaitingStatus, BlockedStatus
-from lightkube import ApiError, Client, codecs
-from lightkube.types import PatchType
-from lightkube.resources.rbac_authorization_v1 import ClusterRole, ClusterRoleBinding
-
-from charms.observability_libs.v0.kubernetes_service_patch import KubernetesServicePatch
 
 
 class ArgoServerOperatorCharm(CharmBase):
+    """Argo Server charm."""
+
     def __init__(self, *args):
         super().__init__(*args)
 
@@ -27,9 +30,8 @@ class ArgoServerOperatorCharm(CharmBase):
         self._container = self.unit.get_container(self._name)
         self._src_dir = Path(__file__).parent
         self._context = {"namespace": self._namespace, "app_name": self._name}
-        self._resource_files = {
-            "auth": "auth_manifests.yaml"
-        }
+        self._resource_files = {"auth": "auth_manifests.yaml"}
+
         # Creates a service to expose argo-server dashboard port
         self._service_patcher = KubernetesServicePatch(self, [("web", self.config["port"], 2746)])
 
@@ -37,14 +39,11 @@ class ArgoServerOperatorCharm(CharmBase):
         self.framework.observe(self.on.config_changed, self._on_config_changed)
         self.framework.observe(self.on.leader_elected, self._on_config_changed)
         self.framework.observe(self.on.upgrade_charm, self._on_config_changed)
-        self.framework.observe(
-            self.on.argo_server_pebble_ready,
-            self._argo_server_pebble_ready
-        )
+        self.framework.observe(self.on.argo_server_pebble_ready, self._argo_server_pebble_ready)
         self.framework.observe(self.on.remove, self._on_remove)
 
     def _on_install(self, _):
-        """Handle the intall-event"""
+        """Handle the intall-event."""
         if not self.unit.is_leader():
             self.unit.status = WaitingStatus("Waiting for leadership")
             return
@@ -66,7 +65,7 @@ class ArgoServerOperatorCharm(CharmBase):
             self.unit.status = ActiveStatus()
 
     def _on_config_changed(self, _):
-        """Handle the config-changed event"""
+        """Handle the config-changed event."""
         if not self.unit.is_leader():
             self.unit.status = WaitingStatus("Waiting for leadership")
             return
@@ -89,12 +88,12 @@ class ArgoServerOperatorCharm(CharmBase):
             self.unit.status = ActiveStatus()
 
     def _argo_server_pebble_ready(self, event):
-        """Handle the pebble-ready event"""
+        """Handle the pebble-ready event."""
         # Update Pebble configuration layer
         self._update_layer()
 
     def _on_remove(self, _):
-        """Handle the remove event"""
+        """Handle the remove event."""
         try:
             self.unit.status = MaintenanceStatus("Deleting auth resources")
             # Destroy the created resources
@@ -108,7 +107,7 @@ class ArgoServerOperatorCharm(CharmBase):
             self.unit.status = ActiveStatus()
 
     def _update_layer(self) -> None:
-        """Update Pebble layer if changed"""
+        """Update Pebble layer if changed."""
         if not self._container.can_connect():
             self.unit.status = WaitingStatus("Waiting for Pebble in workload container")
             return
@@ -128,7 +127,7 @@ class ArgoServerOperatorCharm(CharmBase):
         self.unit.status = ActiveStatus()
 
     def _argo_server_layer(self) -> Layer:
-        """Returns a Pebble configuration layer for Argo Server"""
+        """Return a Pebble configuration layer for Argo Server."""
         layer_config = {
             "summary": "argo server layer",
             "description": "pebble config layer for argo server",
@@ -137,30 +136,28 @@ class ArgoServerOperatorCharm(CharmBase):
                     "override": "replace",
                     "summary": "argo server dashboard",
                     "command": "argo server --auth-mode {}".format(self.config["auth-mode"]),
-                    "startup": "enabled"
+                    "startup": "enabled",
                 }
             },
         }
         return Layer(layer_config)
 
     def _create_resource(self, resource_type: str, context: dict = None) -> None:
-        """Creates Kubernetes resources"""
+        """Create Kubernetes resources."""
         client = Client()
         with open(Path(self._src_dir) / self._resource_files[resource_type]) as f:
             for obj in codecs.load_all_yaml(f, context=context):
                 client.create(obj)
 
     def _patch_resource(self, resource_type: str, context: dict = None) -> None:
-        """Patches Kubernetes resources"""
+        """Patch Kubernetes resources."""
         client = Client()
         with open(Path(self._src_dir) / self._resource_files[resource_type]) as f:
             for obj in codecs.load_all_yaml(f, context=context):
-                client.patch(
-                    type(obj), obj.metadata.name, obj, patch_type=PatchType.MERGE
-                )
+                client.patch(type(obj), obj.metadata.name, obj, patch_type=PatchType.MERGE)
 
     def _delete_resources(self) -> None:
-        """Deletes kubernetes resources"""
+        """Delete kubernetes resources."""
         client = Client()
         self.log.info("Deleting roles from model")
         client.delete(ClusterRoleBinding, name=f"{self._name}-binding", namespace=self._namespace)

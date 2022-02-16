@@ -2,6 +2,8 @@
 # Copyright 2021 Canonical Ltd.
 # See LICENSE file for licensing details.
 
+"""Helper classes to the unit tests."""
+
 from lightkube.core.exceptions import ApiError
 
 

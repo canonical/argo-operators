@@ -2,6 +2,7 @@
 # Copyright 2021 Canonical Ltd.
 # See LICENSE file for licensing details.
 
+"""Integration tests for Argo Server charm."""
 
 import logging
 import urllib.request
@@ -20,7 +21,8 @@ APP_NAME = METADATA["name"]
 @pytest.mark.abort_on_fail
 async def test_build_and_deploy(ops_test: OpsTest):
     """Build the charm-under-test and deploy it together with related charms.
-    Assert on the unit status before any relations/configurations take place.
+
+    Assert on the unit status before any relations/configurations take place
     """
     # build and deploy charm from local source folder
     charm = await ops_test.build_charm(".")
@@ -38,7 +40,7 @@ async def test_build_and_deploy(ops_test: OpsTest):
 
 @pytest.mark.abort_on_fail
 async def test_application_is_up(ops_test: OpsTest):
-    """Test that the dashboard is accessible on the url"""
+    """Test that the dashboard is accessible on the url."""
     status = await ops_test.model.get_status()  # noqa: F821
     address = status["applications"][APP_NAME]["units"][f"{APP_NAME}/0"]["address"]
 
