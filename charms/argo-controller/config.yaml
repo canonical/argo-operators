@@ -22,3 +22,15 @@ options:
     description: |
       If true, Argo will skip checking kubelet's TLS certificate. Has no effect
       with other executors.
+  metrics-api:
+    type: string
+    default: '/metrics'
+    description: metrics api route
+  metrics-scrape-interval:
+    type: string
+    default: '30s'
+    description: how often metrics are scraped
+  metrics-port:
+    type: string
+    default: '8080'
+    description: Metrics port
