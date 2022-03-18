@@ -47,6 +47,7 @@ def test_main_no_relation(harness):
 
 def test_main_with_relation(harness):
     harness.set_leader(True)
+    harness.set_model_name("test_model")
     harness.add_oci_resource(
         "oci-image",
         {
