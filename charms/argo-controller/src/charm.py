@@ -49,7 +49,7 @@ class ArgoControllerCharm(CharmBase):
                     "job_name": "argo_controller_metrics",
                     "scrape_interval": self.config["metrics-scrape-interval"],
                     "metrics_path": self.config["metrics-api"],
-                    "static_configs": [{"targets": ["*:{}".format(self.config["http-port"])]}],
+                    "static_configs": [{"targets": ["*:{}".format(self.config["metrics-port"])]}],
                 }
             ],
         )
