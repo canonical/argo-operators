@@ -1489,6 +1489,7 @@ class GrafanaDashboardAggregator(Object):
                 e.message,
             )
 
+        # The provided dashboard template is based on https://grafana.com/grafana/dashboards/13927 by user M4t3o
         if dashboards_path:
             for path in filter(Path.is_file, Path(dashboards_path).glob("*.tmpl")):
                 if event.app.name in path.name:
