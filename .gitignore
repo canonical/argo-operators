@@ -4,3 +4,4 @@ __pycache__
 operators/argo-controller/build
 .tox
 .vscode/
+.coverage
