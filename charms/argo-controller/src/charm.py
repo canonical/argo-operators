@@ -8,6 +8,8 @@ from glob import glob
 from pathlib import Path
 
 import yaml
+from charms.grafana_k8s.v0.grafana_dashboard import GrafanaDashboardProvider
+from charms.prometheus_k8s.v0.prometheus_scrape import MetricsEndpointProvider
 from ops.charm import CharmBase
 from ops.main import main
 from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
@@ -38,12 +40,33 @@ class ArgoControllerCharm(CharmBase):
         self.log = logging.getLogger(__name__)
 
         self.image = OCIImageResource(self, "oci-image")
+
+        self.prometheus_provider = MetricsEndpointProvider(
+            charm=self,
+            relation_name="monitoring",
+            jobs=[
+                {
+                    "job_name": "argo_controller_metrics",
+                    "scrape_interval": self.config["metrics-scrape-interval"],
+                    "metrics_path": self.config["metrics-api"],
+                    "static_configs": [
+                        {"targets": ["*:{}".format(self.config["metrics-port"])]}
+                    ],
+                }
+            ],
+        )
+
+        self.dashboard_provider = GrafanaDashboardProvider(self)
+
         for event in [
             self.on.install,
             self.on.leader_elected,
             self.on.upgrade_charm,
             self.on.config_changed,
             self.on["object-storage"].relation_changed,
+            self.on["monitoring"].relation_changed,
+            self.on["monitoring"].relation_broken,
+            self.on["monitoring"].relation_departed,
         ]:
             self.framework.observe(event, self.main)
 

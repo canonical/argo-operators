@@ -1,10 +1,12 @@
 # Copyright 2021 Canonical Ltd.
 # See LICENSE file for licensing details.
 
+import json
 import logging
 from pathlib import Path
 
 import pytest
+import requests
 import yaml
 from pytest_operator.plugin import OpsTest
 
@@ -126,3 +128,34 @@ async def test_workflow_using_artifacts(ops_test: OpsTest):
 
     # Submit argo workflow using artifacts and wait for it to finish
     await submit_workflow_using_artifact(ops_test)
+
+
+async def test_prometheus_grafana_integration(ops_test: OpsTest):
+    """Deploy prometheus, grafana and required relations, then test the metrics."""
+    prometheus = "prometheus-k8s"
+    grafana = "grafana-k8s"
+
+    await ops_test.model.deploy(prometheus, channel="latest/beta")
+    await ops_test.model.deploy(grafana, channel="latest/beta")
+    await ops_test.model.add_relation(prometheus, grafana)
+    await ops_test.model.add_relation(APP_NAME, grafana)
+    await ops_test.model.add_relation(prometheus, APP_NAME)
+
+    await ops_test.model.wait_for_idle(status="active", timeout=60 * 10)
+
+    status = await ops_test.model.get_status()
+    prometheus_unit_ip = status["applications"][prometheus]["units"][f"{prometheus}/0"][
+        "address"
+    ]
+    log.info(f"Prometheus available at http://{prometheus_unit_ip}:9090")
+
+    r = requests.get(
+        f'http://{prometheus_unit_ip}:9090/api/v1/query?query=up{{juju_application="{APP_NAME}"}}'
+    )
+    response = json.loads(r.content.decode("utf-8"))
+    response_status = response["status"]
+    log.info(f"Response status is {response_status}")
+
+    response_metric = response["data"]["result"][0]["metric"]
+    assert response_metric["juju_application"] == APP_NAME
+    assert response_metric["juju_model"] == ops_test.model_name
