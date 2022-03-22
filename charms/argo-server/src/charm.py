@@ -48,9 +48,6 @@ class ArgoServerOperatorCharm(CharmBase):
             self.unit.status = WaitingStatus("Waiting for leadership")
             return
 
-        # Update Pebble configuration layer
-        self._update_layer()
-
         # Create Kubernetes resources
         try:
             self.unit.status = MaintenanceStatus("Creating auth resources")
