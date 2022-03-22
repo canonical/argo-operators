@@ -80,11 +80,14 @@ class TestCharm(unittest.TestCase):
         self.assertEqual(self.harness.model.unit.status, ActiveStatus())
 
     @patch("charm.ApiError", _FakeApiError)
+    @patch("charm.ArgoServerOperatorCharm._patch_resource")
     @patch("charm.ArgoServerOperatorCharm._create_resource")
-    def test_blocked_on_install(self, create_resource):
+    def test_blocked_on_api_error(self, create_resource, patch_resource):
         """Test unit status is blocked when failed to create resources."""
         self.harness.set_leader(True)
         create_resource.side_effect = _FakeApiError()
+        patch_resource.side_effect = _FakeApiError()
+
         try:
             self.harness.charm.on.install.emit()
         except ApiError:
@@ -92,6 +95,16 @@ class TestCharm(unittest.TestCase):
                 self.harness.charm.unit.status,
                 BlockedStatus(
                     "Creating resources failed with code "
+                    f"{create_resource.side_effect.response.code}."
+                ),
+            )
+        try:
+            self.harness.charm.on.config_changed.emit()
+        except ApiError:
+            self.assertEqual(
+                self.harness.charm.unit.status,
+                BlockedStatus(
+                    "Patching resources failed with code "
                     f"{create_resource.side_effect.response.code}."
                 ),
             )
