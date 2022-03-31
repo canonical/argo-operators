@@ -51,14 +51,13 @@ class ArgoControllerCharm(CharmBase):
             jobs=[
                 {
                     "metrics_path": METRICS_PATH,
-                    "static_configs": [
-                        {"targets": ["*:{}".format(METRICS_PORT)]}
-                    ],
+                    "static_configs": [{"targets": ["*:{}".format(METRICS_PORT)]}],
                 }
             ],
         )
 
-        # The provided dashboard template is based on https://grafana.com/grafana/dashboards/13927 by user M4t3o
+        # The provided dashboard template is based on https://grafana.com/grafana/dashboards/13927
+        # by user M4t3o
         self.dashboard_provider = GrafanaDashboardProvider(
             charm=self,
             relation_name="grafana-dashboards",
