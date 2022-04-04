@@ -22,6 +22,10 @@ from serialized_data_interface import (
 )
 
 
+METRICS_PATH = "/metrics"
+METRICS_PORT = "8080"
+
+
 class CheckFailed(Exception):
     """ Raise this exception if one of the checks in main fails. """
 
@@ -43,20 +47,21 @@ class ArgoControllerCharm(CharmBase):
 
         self.prometheus_provider = MetricsEndpointProvider(
             charm=self,
-            relation_name="monitoring",
+            relation_name="metrics-endpoint",
             jobs=[
                 {
-                    "job_name": "argo_controller_metrics",
-                    "scrape_interval": self.config["metrics-scrape-interval"],
-                    "metrics_path": self.config["metrics-api"],
-                    "static_configs": [
-                        {"targets": ["*:{}".format(self.config["metrics-port"])]}
-                    ],
+                    "metrics_path": METRICS_PATH,
+                    "static_configs": [{"targets": ["*:{}".format(METRICS_PORT)]}],
                 }
             ],
         )
 
-        self.dashboard_provider = GrafanaDashboardProvider(self)
+        # The provided dashboard template is based on https://grafana.com/grafana/dashboards/13927
+        # by user M4t3o
+        self.dashboard_provider = GrafanaDashboardProvider(
+            charm=self,
+            relation_name="grafana-dashboards",
+        )
 
         for event in [
             self.on.install,
@@ -64,9 +69,6 @@ class ArgoControllerCharm(CharmBase):
             self.on.upgrade_charm,
             self.on.config_changed,
             self.on["object-storage"].relation_changed,
-            self.on["monitoring"].relation_changed,
-            self.on["monitoring"].relation_broken,
-            self.on["monitoring"].relation_departed,
         ]:
             self.framework.observe(event, self.main)
 
