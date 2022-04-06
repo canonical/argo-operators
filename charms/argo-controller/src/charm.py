@@ -60,7 +60,7 @@ class ArgoControllerCharm(CharmBase):
         # by user M4t3o
         self.dashboard_provider = GrafanaDashboardProvider(
             charm=self,
-            relation_name="grafana-dashboards",
+            relation_name="grafana-dashboard",
         )
 
         for event in [
