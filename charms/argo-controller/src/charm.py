@@ -23,7 +23,7 @@ from serialized_data_interface import (
 
 
 METRICS_PATH = "/metrics"
-METRICS_PORT = "8080"
+METRICS_PORT = "9090"
 
 
 class CheckFailed(Exception):
