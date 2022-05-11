@@ -58,10 +58,7 @@ class ArgoControllerCharm(CharmBase):
 
         # The provided dashboard template is based on https://grafana.com/grafana/dashboards/13927
         # by user M4t3o
-        self.dashboard_provider = GrafanaDashboardProvider(
-            charm=self,
-            relation_name="grafana-dashboard",
-        )
+        self.dashboard_provider = GrafanaDashboardProvider(self)
 
         for event in [
             self.on.install,
