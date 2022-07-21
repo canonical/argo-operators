@@ -81,7 +81,7 @@ class Operator(CharmBase):
                                 {
                                     "apiGroups": [""],
                                     "resources": ["serviceaccounts"],
-                                    "verbs": ["get", "list"],
+                                    "verbs": ["get", "list", "watch"],
                                 },
                                 {
                                     "apiGroups": ["argoproj.io"],
