@@ -27,7 +27,7 @@ METRICS_PORT = "9090"
 
 
 class CheckFailed(Exception):
-    """ Raise this exception if one of the checks in main fails. """
+    """Raise this exception if one of the checks in main fails."""
 
     def __init__(self, msg: str, status_type=None):
         super().__init__()
@@ -142,12 +142,20 @@ class ArgoControllerCharm(CharmBase):
                                 },
                                 {
                                     "apiGroups": [""],
-                                    "resources": ["persistentvolumeclaims"],
-                                    "verbs": ["create", "delete", "get"],
+                                    "resources": [
+                                        "persistentvolumeclaims",
+                                        "persistentvolumeclaims/finalizers",
+                                    ],
+                                    "verbs": ["create", "delete", "get", "update"],
                                 },
                                 {
                                     "apiGroups": ["argoproj.io"],
-                                    "resources": ["workflows", "workflows/finalizers"],
+                                    "resources": [
+                                        "workflows",
+                                        "workflows/finalizers",
+                                        "workflowtasksets",
+                                        "workflowtasksets/finalizers",
+                                    ],
                                     "verbs": [
                                         "get",
                                         "list",
@@ -189,6 +197,17 @@ class ArgoControllerCharm(CharmBase):
                                         "watch",
                                         "update",
                                         "patch",
+                                        "delete",
+                                    ],
+                                },
+                                {
+                                    "apiGroups": ["argoproj.io"],
+                                    "resources": [
+                                        "workflowtaskresults",
+                                    ],
+                                    "verbs": [
+                                        "list",
+                                        "watch",
                                         "delete",
                                     ],
                                 },
