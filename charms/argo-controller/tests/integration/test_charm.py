@@ -137,17 +137,22 @@ async def test_prometheus_grafana_integration(ops_test: OpsTest):
     prometheus_scrape_charm = "prometheus-scrape-config-k8s"
     scrape_config = {"scrape_interval": "30s"}
 
-    await ops_test.model.deploy(prometheus, channel="latest/beta")
-    await ops_test.model.deploy(grafana, channel="latest/beta")
-    await ops_test.model.add_relation(prometheus, grafana)
-    await ops_test.model.add_relation(APP_NAME, grafana)
+    await ops_test.model.deploy(prometheus, channel="latest/beta", trust=True)
+    await ops_test.model.deploy(grafana, channel="latest/beta", trust=True)
+    await ops_test.model.add_relation(
+        f"{prometheus}:grafana-dashboard", f"{grafana}:grafana-dashboard"
+    )
+    await ops_test.model.add_relation(
+        f"{APP_NAME}:grafana-dashboard", f"{grafana}:grafana-dashboard"
+    )
     await ops_test.model.deploy(
         prometheus_scrape_charm,
         channel="latest/beta",
         config=scrape_config)
     await ops_test.model.add_relation(APP_NAME, prometheus_scrape_charm)
-    await ops_test.model.add_relation(prometheus, prometheus_scrape_charm)
-
+    await ops_test.model.add_relation(
+        f"{prometheus}:metrics-endpoint", f"{prometheus_scrape_charm}:metrics-endpoint"
+    )
     await ops_test.model.wait_for_idle(status="active", timeout=60 * 10)
 
     status = await ops_test.model.get_status()
