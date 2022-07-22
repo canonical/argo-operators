@@ -137,8 +137,8 @@ async def test_prometheus_grafana_integration(ops_test: OpsTest):
     prometheus_scrape_charm = "prometheus-scrape-config-k8s"
     scrape_config = {"scrape_interval": "30s"}
 
-    await ops_test.model.deploy(prometheus, channel="latest/beta", trust=True)
-    await ops_test.model.deploy(grafana, channel="latest/beta", trust=True)
+    await ops_test.model.deploy(prometheus, channel="latest/edge", trust=True)
+    await ops_test.model.deploy(grafana, channel="latest/edge", trust=True)
     await ops_test.model.add_relation(
         f"{prometheus}:grafana-dashboard", f"{grafana}:grafana-dashboard"
     )
