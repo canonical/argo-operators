@@ -12,16 +12,22 @@ jobs:
   lib-check:
     name: Check libraries
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        charm:
+        - argo-controller
+        - argo-server
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-      - name: Check libs
-        uses: canonical/charming-actions/check-libraries@1.0.3
-        with:
-          credentials: "${{ secrets.charmcraft-credentials }}"
-          github-token: "${{ secrets.GITHUB_TOKEN }}"
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: Check libs
+      uses: canonical/charming-actions/check-libraries@1.0.3
+      with:
+        charm-path: ./charms/${{ matrix.charm }}
+        credentials: "${{ secrets.charmcraft-credentials }}"
+        github-token: "${{ secrets.GITHUB_TOKEN }}"
 
   lint:
     name: Lint Code
@@ -30,12 +36,12 @@ jobs:
       matrix:
         charm: [argo-controller, argo-server]
     steps:
-      - name: Check out repo
-        uses: actions/checkout@v2
-      - run: |
-          sudo apt update
-          sudo apt install tox
-      - run: tox -vve ${{ matrix.charm }}-lint
+    - name: Check out repo
+      uses: actions/checkout@v2
+    - run: |
+        sudo apt update
+        sudo apt install tox
+    - run: tox -vve ${{ matrix.charm }}-lint
 
   unit:
     name: Unit Tests
@@ -44,12 +50,12 @@ jobs:
       matrix:
         charm: [argo-controller, argo-server]
     steps:
-      - name: Check out repo
-        uses: actions/checkout@v2
-      - run: |
-          sudo apt update
-          sudo apt install tox
-      - run: tox -vve ${{ matrix.charm }}-unit
+    - name: Check out repo
+      uses: actions/checkout@v2
+    - run: |
+        sudo apt update
+        sudo apt install tox
+    - run: tox -vve ${{ matrix.charm }}-unit
 
   integration:
     name: Integration Test
@@ -58,45 +64,45 @@ jobs:
       matrix:
         charm: [argo-controller]
     steps:
-      - uses: actions/checkout@v2
-      - name: Setup operator environment
-        uses: charmed-kubernetes/actions-operator@main
-        with:
-          provider: microk8s
-          channel: 1.21/stable
-          charmcraft-channel: latest/candidate
+    - uses: actions/checkout@v2
+    - name: Setup operator environment
+      uses: charmed-kubernetes/actions-operator@main
+      with:
+        provider: microk8s
+        channel: 1.21/stable
+        charmcraft-channel: latest/candidate
 
       # TODO: Remove once the actions-operator does this automatically
-      - name: Configure kubectl
-        run: |
-          sg microk8s -c "microk8s config > ~/.kube/config"
+    - name: Configure kubectl
+      run: |
+        sg microk8s -c "microk8s config > ~/.kube/config"
 
-      - name: Build and test
-        working-directory: ./charms/${{ matrix.charm }}
-        run: |
-          sg microk8s -c "tox -vve integration -- --model testing"
+    - name: Build and test
+      working-directory: ./charms/${{ matrix.charm }}
+      run: |
+        sg microk8s -c "tox -vve integration -- --model testing"
 
       # On failure, capture debugging resources
-      - name: Get all
-        run: kubectl get all -A
-        if: failure()
+    - name: Get all
+      run: kubectl get all -A
+      if: failure()
 
-      - name: Describe deployments
-        run: kubectl describe deployments -A
-        if: failure()
+    - name: Describe deployments
+      run: kubectl describe deployments -A
+      if: failure()
 
-      - name: Describe replicasets
-        run: kubectl describe replicasets -A
-        if: failure()
+    - name: Describe replicasets
+      run: kubectl describe replicasets -A
+      if: failure()
 
-      - name: Get juju status
-        run: juju status
-        if: failure()
+    - name: Get juju status
+      run: juju status
+      if: failure()
 
-      - name: Get application logs
-        run: kubectl logs -n testing --tail 1000 -ljuju-app=${{ matrix.charm }}
-        if: failure()
+    - name: Get application logs
+      run: kubectl logs -n testing --tail 1000 -ljuju-app=${{ matrix.charm }}
+      if: failure()
 
-      - name: Get argo-controller operator logs
-        run: kubectl logs -n testing --tail 1000 -ljuju-operator=${{ matrix.charm }}
-        if: failure()
+    - name: Get argo-controller operator logs
+      run: kubectl logs -n testing --tail 1000 -ljuju-operator=${{ matrix.charm }}
+      if: failure()
