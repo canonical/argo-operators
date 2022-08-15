@@ -1,5 +1,5 @@
 # Copyright 2021 Canonical Ltd.
 # See LICENSE file for licensing details.
-
+juju<3.0
 pytest
 pyyaml
