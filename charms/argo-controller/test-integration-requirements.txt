@@ -2,3 +2,4 @@
 # See LICENSE file for licensing details.
 
 pytest-operator > 0.8.2
+tenacity<8.1
