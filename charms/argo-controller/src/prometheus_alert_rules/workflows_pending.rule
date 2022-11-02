@@ -1,0 +1,17 @@
+alert: ArgoWorkflowsPending
+expr: |
+  increase(
+    argo_workflows_count{status="Pending"}[2m]
+  ) > 1
+for: 10m
+labels:
+  severity: warning
+annotations:
+  summary: >
+    Amount of pending Argo Workflows is increasing.
+  description: >
+    The amount of pending argo workflows spawned by
+    {{ $labels.juju_application }} in model {{ $labels.juju_model }}
+    is increasing.
+
+    LABELS = {{ $labels }}
