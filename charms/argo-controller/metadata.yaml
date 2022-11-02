@@ -2,23 +2,33 @@
 # See LICENSE file for licensing details.
 name: argo-controller
 summary: Container-Native Workflow Engine for Kubernetes
-description: Container-Native Workflow Engine for Kubernetes
+description: |
+  Container-Native Workflow Engine for Kubernetes
+
 min-juju-version: "2.9.0"
-series: [kubernetes]
+series: 
+  - kubernetes
+assumes:
+  - k8s-api
+
 resources:
   oci-image:
     type: oci-image
     description: 'Backing OCI image'
     auto-fetch: true
     upstream-source: argoproj/workflow-controller:v3.3.8
+
 requires:
   object-storage:
     interface: object-storage
     schema: https://raw.githubusercontent.com/canonical/operator-schemas/master/object-storage.yaml
-    versions: [v1]
+    versions: 
+      - v1
+
 deployment:
   type: stateless
   service: omit
+
 provides:
   metrics-endpoint:
     interface: prometheus_scrape
