@@ -11,7 +11,7 @@ jobs:
 
   lib-check:
     name: Check libraries
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         charm:
@@ -31,7 +31,7 @@ jobs:
 
   lint:
     name: Lint Code
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         charm: [argo-controller, argo-server]
@@ -45,7 +45,7 @@ jobs:
 
   unit:
     name: Unit Tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         charm: [argo-controller, argo-server]
@@ -59,7 +59,7 @@ jobs:
 
   integration:
     name: Integration Test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         charm: [argo-controller]
