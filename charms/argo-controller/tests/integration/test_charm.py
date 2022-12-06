@@ -255,6 +255,77 @@ async def test_prometheus_grafana_integration(ops_test: OpsTest):
             for rule in rules:
                 assert rule["name"] in test_alerts
 
+    # Verify that Prometheus receives the same set of targets as specified,
+    for attempt in retry_for_5_attempts:
+        log.info(
+            f"Testing prometheus targets (attempt "
+            f"{attempt.retry_state.attempt_number})"
+        )
+        with attempt:
+            # obtain scrape targets from Prometheus
+            targets_result = requests.get(
+                f"http://{prometheus_unit_ip}:9090/api/v1/targets"
+            )
+            response = json.loads(targets_result.content.decode("utf-8"))
+            response_status = response["status"]
+            log.info(f"Response status is {response_status}")
+            assert response_status == "success"
+
+            # verify that Argo Controller is in the target list
+            discovered_labels = response["data"]["activeTargets"][0]["discoveredLabels"]
+            assert discovered_labels["juju_application"] == "argo-controller"
+
+    # Verify that Prometheus receives the same set of alert rules as specified,
+    for attempt in retry_for_5_attempts:
+        log.info(
+            f"Testing prometheus rules (attempt "
+            f"{attempt.retry_state.attempt_number})"
+        )
+        with attempt:
+            # obtain alert rules from Prometheus
+            rules_result = requests.get(
+                f"http://{prometheus_unit_ip}:9090/api/v1/rules"
+            )
+            response = json.loads(rules_result.content.decode("utf-8"))
+            response_status = response["status"]
+            log.info(f"Response status is {response_status}")
+            assert response_status == "success"
+
+            # verify alerts are available in Prometheus
+            rules = []
+            for group in response["data"]["groups"]:
+                rules = group["rules"]
+
+            # load alert rules from the rules file
+            test_alerts = []
+            with open("src/prometheus_alert_rules/loglines_error.rule") as f:
+                file_alert = yaml.safe_load(f.read())
+                test_alerts.append(file_alert["alert"])
+            with open("src/prometheus_alert_rules/loglines_warning.rule") as f:
+                file_alert = yaml.safe_load(f.read())
+                test_alerts.append(file_alert["alert"])
+            with open("src/prometheus_alert_rules/unit_unavailable.rule") as f:
+                file_alert = yaml.safe_load(f.read())
+                test_alerts.append(file_alert["alert"])
+            with open("src/prometheus_alert_rules/workflows_erroring.rule") as f:
+                file_alert = yaml.safe_load(f.read())
+                test_alerts.append(file_alert["alert"])
+            with open("src/prometheus_alert_rules/workflows_failing.rule") as f:
+                file_alert = yaml.safe_load(f.read())
+                test_alerts.append(file_alert["alert"])
+            with open("src/prometheus_alert_rules/workflows_pending.rule") as f:
+                file_alert = yaml.safe_load(f.read())
+                test_alerts.append(file_alert["alert"])
+
+            # verify number of alerts is the same in Prometheus and in the rules file
+            assert len(rules) == len(test_alerts)
+
+            # verify that all Argo Controller alert rules are in the list and that alerts obtained
+            # from Prometheus
+            # match alerts in the rules files
+            for rule in rules:
+                assert rule["name"] in test_alerts
+
 
 # Helper to retry calling a function over 30 seconds or 5 attempts
 retry_for_5_attempts = tenacity.Retrying(
