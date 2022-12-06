@@ -6,9 +6,9 @@ for: 4m
 labels:
   severity: warning
 annotations:
-  summary:  
+  summary:
   description: |
-    The Argo controller warning logs has increased by at least 
+    The Argo controller warning logs has increased by at least
     40 lines per minute for the last 4 minutes.
 
     Model: {{ $labels.juju_model }}
