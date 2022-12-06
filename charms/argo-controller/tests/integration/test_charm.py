@@ -222,7 +222,7 @@ async def test_prometheus_grafana_integration(ops_test: OpsTest):
             # verify alerts are available in Prometheus
             rules = []
             for group in response["data"]["groups"]:
-                rules = group["rules"]
+                rules.append(group["rules"][0])
 
             # load alert rules from the rule files
             test_alerts = []
@@ -248,8 +248,8 @@ async def test_prometheus_grafana_integration(ops_test: OpsTest):
             # verify number of alerts is the same in Prometheus and in the rules file
             assert len(rules) == len(test_alerts)
 
-            # verify that all Argo Controller alert rules are in the list and that alerts obtained
-            # from Prometheus
+            # verify that all Argo Controller alert rules are in the list and that alerts are
+            # obtained from Prometheus
             # match alerts in the rules files
             for rule in rules:
                 assert rule["name"] in test_alerts
