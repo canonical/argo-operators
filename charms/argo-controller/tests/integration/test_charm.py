@@ -139,9 +139,7 @@ async def test_prometheus_grafana_integration(ops_test: OpsTest):
     # Deploy and relate prometheus
     await ops_test.model.deploy(prometheus, channel="latest/stable", trust=True)
     await ops_test.model.deploy(grafana, channel="latest/stable", trust=True)
-    await ops_test.model.deploy(
-        prometheus_scrape, channel="latest/stable", config=scrape_config
-    )
+    await ops_test.model.deploy(prometheus_scrape, channel="latest/stable", config=scrape_config)
 
     await ops_test.model.add_relation(APP_NAME, prometheus_scrape)
     await ops_test.model.add_relation(
@@ -180,15 +178,10 @@ async def test_prometheus_grafana_integration(ops_test: OpsTest):
 
     # Verify that Prometheus receives the same set of targets as specified.
     for attempt in retry_for_5_attempts:
-        log.info(
-            f"Testing prometheus targets (attempt "
-            f"{attempt.retry_state.attempt_number})"
-        )
+        log.info(f"Testing prometheus targets (attempt {attempt.retry_state.attempt_number})")
         with attempt:
             # obtain scrape targets from Prometheus
-            targets_result = requests.get(
-                f"http://{prometheus_unit_ip}:9090/api/v1/targets"
-            )
+            targets_result = requests.get(f"http://{prometheus_unit_ip}:9090/api/v1/targets")
             response = json.loads(targets_result.content.decode("utf-8"))
             response_status = response["status"]
             log.info(f"Response status is {response_status}")
@@ -200,15 +193,10 @@ async def test_prometheus_grafana_integration(ops_test: OpsTest):
 
     # Verify that Prometheus receives the same set of alert rules as specified.
     for attempt in retry_for_5_attempts:
-        log.info(
-            f"Testing prometheus rules (attempt "
-            f"{attempt.retry_state.attempt_number})"
-        )
+        log.info(f"Testing prometheus rules (attempt {attempt.retry_state.attempt_number})")
         with attempt:
             # obtain alert rules from Prometheus
-            rules_result = requests.get(
-                f"http://{prometheus_unit_ip}:9090/api/v1/rules"
-            )
+            rules_result = requests.get(f"http://{prometheus_unit_ip}:9090/api/v1/rules")
             response = json.loads(rules_result.content.decode("utf-8"))
             response_status = response["status"]
             log.info(f"Response status is {response_status}")
@@ -248,6 +236,7 @@ async def test_prometheus_grafana_integration(ops_test: OpsTest):
             # match alerts in the rules files
             for rule in rules:
                 assert rule["name"] in test_alerts
+
 
 # Helper to retry calling a function over 30 seconds or 5 attempts
 retry_for_5_attempts = tenacity.Retrying(
