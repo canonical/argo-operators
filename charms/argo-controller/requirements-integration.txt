@@ -228,9 +228,7 @@ wcwidth==0.2.5
 websocket-client==1.4.2
     # via kubernetes
 websockets==10.4
-    # via
-    #   -r requirements-integration.in
-    #   juju
+    # via juju
 yarl==1.8.2
     # via aiohttp
 

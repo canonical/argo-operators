@@ -4,5 +4,4 @@ juju
 pytest-operator
 requests
 tenacity
-websockets
 -r requirements.txt
