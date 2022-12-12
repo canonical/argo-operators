@@ -39,9 +39,7 @@ async def test_build_and_deploy_with_relations(ops_test: OpsTest):
 
     # Deploy required relations
     await ops_test.model.deploy(entity_url="minio", config=MINIO_CONFIG)
-    await ops_test.model.add_relation(
-        f"{APP_NAME}:object-storage", "minio:object-storage"
-    )
+    await ops_test.model.add_relation(f"{APP_NAME}:object-storage", "minio:object-storage")
 
     await ops_test.model.wait_for_idle(timeout=60 * 10)
     # TODO: This does not handle blocked status right.  Sometimes it passes when argo-controller
@@ -141,9 +139,7 @@ async def test_prometheus_grafana_integration(ops_test: OpsTest):
     # Deploy and relate prometheus
     await ops_test.model.deploy(prometheus, channel="latest/edge", trust=True)
     await ops_test.model.deploy(grafana, channel="latest/edge", trust=True)
-    await ops_test.model.deploy(
-        prometheus_scrape, channel="latest/beta", config=scrape_config
-    )
+    await ops_test.model.deploy(prometheus_scrape, channel="latest/beta", config=scrape_config)
 
     await ops_test.model.add_relation(APP_NAME, prometheus_scrape)
     await ops_test.model.add_relation(
@@ -159,15 +155,12 @@ async def test_prometheus_grafana_integration(ops_test: OpsTest):
     await ops_test.model.wait_for_idle(status="active", timeout=60 * 20)
 
     status = await ops_test.model.get_status()
-    prometheus_unit_ip = status["applications"][prometheus]["units"][f"{prometheus}/0"][
-        "address"
-    ]
+    prometheus_unit_ip = status["applications"][prometheus]["units"][f"{prometheus}/0"]["address"]
     log.info(f"Prometheus available at http://{prometheus_unit_ip}:9090")
 
     for attempt in retry_for_5_attempts:
         log.info(
-            f"Testing prometheus deployment (attempt "
-            f"{attempt.retry_state.attempt_number})"
+            f"Testing prometheus deployment (attempt " f"{attempt.retry_state.attempt_number})"
         )
         with attempt:
             r = requests.get(

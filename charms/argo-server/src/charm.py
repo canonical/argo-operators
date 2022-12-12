@@ -4,15 +4,14 @@
 
 import logging
 
+from oci_image import OCIImageResource, OCIImageResourceError
 from ops.charm import CharmBase
 from ops.main import main
 from ops.model import ActiveStatus, MaintenanceStatus, WaitingStatus
 
-from oci_image import OCIImageResource, OCIImageResourceError
-
 
 class CheckFailed(Exception):
-    """ Raise this exception if one of the checks in main fails. """
+    """Raise this exception if one of the checks in main fails."""
 
     def __init__(self, msg, status_type=None):
         super().__init__()
@@ -114,9 +113,7 @@ class Operator(CharmBase):
                         "imageDetails": image_details,
                         "imagePullPolicy": "Always",
                         "args": ["server"],
-                        "ports": [
-                            {"name": "web", "containerPort": self.model.config["port"]}
-                        ],
+                        "ports": [{"name": "web", "containerPort": self.model.config["port"]}],
                         "kubernetes": {
                             "readinessProbe": {
                                 "httpGet": {
