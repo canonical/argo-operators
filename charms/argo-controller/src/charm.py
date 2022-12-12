@@ -10,17 +10,11 @@ from pathlib import Path
 import yaml
 from charms.grafana_k8s.v0.grafana_dashboard import GrafanaDashboardProvider
 from charms.prometheus_k8s.v0.prometheus_scrape import MetricsEndpointProvider
+from oci_image import OCIImageResource, OCIImageResourceError
 from ops.charm import CharmBase
 from ops.main import main
 from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
-
-from oci_image import OCIImageResource, OCIImageResourceError
-from serialized_data_interface import (
-    NoCompatibleVersions,
-    NoVersionsListed,
-    get_interfaces,
-)
-
+from serialized_data_interface import NoCompatibleVersions, NoVersionsListed, get_interfaces
 
 METRICS_PATH = "/metrics"
 METRICS_PORT = "9090"
@@ -272,20 +266,15 @@ class ArgoControllerCharm(CharmBase):
                 ],
                 "kubernetesResources": {
                     "customResourceDefinitions": [
-                        {"name": crd["metadata"]["name"], "spec": crd["spec"]}
-                        for crd in crds
+                        {"name": crd["metadata"]["name"], "spec": crd["spec"]} for crd in crds
                     ],
                     "secrets": [
                         {
                             "name": "mlpipeline-minio-artifact",
                             "type": "Opaque",
                             "data": {
-                                "accesskey": b64encode(
-                                    os["access-key"].encode("utf-8")
-                                ),
-                                "secretkey": b64encode(
-                                    os["secret-key"].encode("utf-8")
-                                ),
+                                "accesskey": b64encode(os["access-key"].encode("utf-8")),
+                                "secretkey": b64encode(os["secret-key"].encode("utf-8")),
                             },
                         }
                     ],

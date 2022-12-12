@@ -3,10 +3,9 @@
 
 import json
 import pytest
-
+import yaml
 from ops.model import ActiveStatus, BlockedStatus, WaitingStatus
 from ops.testing import Harness
-import yaml
 
 from charm import ArgoControllerCharm
 
