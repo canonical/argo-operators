@@ -1,0 +1,17 @@
+alert: ArgoWorkflowErrorLoglines
+expr: |
+  increase(log_messages{level="error"}[2m])
+  > 10
+for: 4m
+labels:
+  severity: critical
+annotations:
+  summary:
+  description: |
+    The Argo controller warning logs has increased by at least
+    10 lines per minute for the last 4 minutes.
+
+    Model: {{ $labels.juju_model }}
+    Application: {{ $labels.juju_application }}
+
+    LABELS = {{ $labels }}

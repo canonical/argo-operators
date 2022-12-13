@@ -2,5 +2,4 @@
 # See LICENSE file for licensing details.
 
 pytest
-pytest-mock
-pyyaml
+flake8
