@@ -1,6 +1,5 @@
 # Copyright 2021 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-pytest
-pytest-mock
-pyyaml
+oci-image
+ops
