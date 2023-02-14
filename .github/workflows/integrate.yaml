@@ -19,7 +19,7 @@ jobs:
         - argo-server
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         fetch-depth: 0
     - name: Check libs
@@ -37,7 +37,7 @@ jobs:
         charm: [argo-controller, argo-server]
     steps:
     - name: Check out repo
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - run: |
         sudo apt update
         sudo apt install tox
@@ -51,7 +51,7 @@ jobs:
         charm: [argo-controller, argo-server]
     steps:
     - name: Check out repo
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - run: |
         sudo apt update
         sudo apt install tox
@@ -64,7 +64,7 @@ jobs:
       matrix:
         charm: [argo-controller]
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Setup operator environment
       uses: claudiubelu/actions-operator@18ebf92ae3043bd3dd15238e5d9b662d7ba08daf
       with:
