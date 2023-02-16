@@ -3,6 +3,10 @@
 name: argo-controller
 summary: Container-Native Workflow Engine for Kubernetes
 description: Container-Native Workflow Engine for Kubernetes
+website: https://charmhub.io/argo-controller
+source: https://github.com/canonical/argo-operators/argo-controller
+issues: https://github.com/canonical/argo-operators/issues
+docs: https://discourse.charmhub.io/t/argo-controller/8212
 min-juju-version: "2.9.0"
 series: [kubernetes]
 resources:
