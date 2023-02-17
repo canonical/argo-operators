@@ -3,6 +3,10 @@
 name: argo-server
 summary: Container-Native Workflow Engine for Kubernetes
 description: Container-Native Workflow Engine for Kubernetes
+website: https://charmhub.io/argo-server
+source: https://github.com/canonical/argo-operators/argo-server
+issues: https://github.com/canonical/argo-operators/issues
+docs: https://discourse.charmhub.io/t/charmed-argo-server/8212
 min-juju-version: "2.9.0"
 series: [kubernetes]
 resources:

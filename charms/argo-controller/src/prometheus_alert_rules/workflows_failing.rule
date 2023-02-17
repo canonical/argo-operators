@@ -1,0 +1,14 @@
+alert: ArgoWorkflowsFailed
+expr: |
+  increase(
+    argo_workflows_count{status="Failed"}[2m]
+  ) > 1
+for: 10m
+labels:
+  severity: warning
+annotations:
+  summary: >
+    Amount of failing Argo Workflows is increasing.
+  description: >
+    The argo workflows spawned by {{ $labels.juju_model }} {{ $labels.juju_application }} are failing.
+    LABELS = {{ $labels }}
