@@ -38,7 +38,6 @@ class Operator(CharmBase):
 
     def main(self, event):
         try:
-
             self._check_leader()
 
             image_details = self._check_image_details()
