@@ -58,7 +58,7 @@ ipdb==0.13.13
     # via pytest-operator
 ipython==8.12.2
     # via ipdb
-jedi==0.18.2
+jedi==0.19.0
     # via ipython
 jinja2==3.1.2
     # via
