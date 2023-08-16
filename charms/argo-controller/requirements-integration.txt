@@ -10,7 +10,7 @@ aiosignal==1.3.1
     # via aiohttp
 asttokens==2.2.1
     # via stack-data
-async-timeout==4.0.2
+async-timeout==4.0.3
     # via aiohttp
 attrs==23.1.0
     # via aiohttp
@@ -32,13 +32,13 @@ charset-normalizer==3.2.0
     # via
     #   aiohttp
     #   requests
-cryptography==41.0.2
+cryptography==41.0.3
     # via paramiko
 decorator==5.1.1
     # via
     #   ipdb
     #   ipython
-exceptiongroup==1.1.2
+exceptiongroup==1.1.3
     # via pytest
 executing==1.2.0
     # via stack-data
@@ -119,7 +119,7 @@ pyasn1-modules==0.3.0
     # via google-auth
 pycparser==2.21
     # via cffi
-pygments==2.15.1
+pygments==2.16.1
     # via ipython
 pymacaroons==0.13.0
     # via macaroonbakery
@@ -172,7 +172,7 @@ six==1.16.0
     #   python-dateutil
 stack-data==0.6.2
     # via ipython
-tenacity==8.2.2
+tenacity==8.2.3
     # via -r requirements-integration.in
 theblues==0.5.2
     # via juju
