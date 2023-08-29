@@ -17,6 +17,11 @@ options:
       Runtime executor for workflow containers. Defaults to `emissary` as it is the default in both Argo Workflows and
       the upstream Kubeflow project. Cannot be `docker` on containerd, for a full list of executors, see:
       https://argoproj.github.io/argo-workflows/workflow-executors/#workflow-executors
+  executor-image:
+    type: string
+    default: argoproj/argoexec:v3.3.8
+    description: |
+      Image to use for runtime executor. Should be updated alongside updating the rest of the charm's images.
   kubelet-insecure:
     type: boolean
     default: false
