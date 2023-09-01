@@ -80,10 +80,7 @@ class ArgoControllerCharm(CharmBase):
         self.model.unit.status = MaintenanceStatus("Setting pod spec")
 
         # Sync the argoproj/argoexec image to the same version
-        metadata = yaml.safe_load(Path("metadata.yaml").read_bytes())
-        version = metadata["resources"]["oci-image"]["upstream-source"].split(":")[-1]
-        executor_image = f"argoproj/argoexec:{version}"
-        self.log.info(f"using executorImage {executor_image}")
+        executor_image = self.model.config["executor-image"]
 
         config_map = {
             "containerRuntimeExecutor": self.model.config["executor"],
