@@ -7,10 +7,10 @@ data:
       insecure: {{ kubelet_insecure }}
       accessKeySecret:
         name: {{ mlpipeline_minio_artifact_secret }}
-        key: {{ access_key }}
+        key: accesskey
       secretKeySecret:
         name: {{ mlpipeline_minio_artifact_secret }}
-        key: {{ secret_key }}
+        key: secretkey
   containerRuntimeExecutors: |
     - name: {{ runtime_executor }}
       selector:
@@ -30,22 +30,6 @@ data:
        command: [cowsay]
     python:alpine3.6:
        command: [python3]
-  links: |
-    - name: Workflow Link
-      scope: workflow
-      url: http://logging-facility?namespace=${metadata.namespace}&workflowName=${metadata.name}&startedAt=${status.startedAt}&finishedAt=${status.finishedAt}
-    - name: Pod Link
-      scope: pod
-      url: http://logging-facility?namespace=${metadata.namespace}&podName=${metadata.name}&startedAt=${status.startedAt}&finishedAt=${status.finishedAt}
-    - name: Pod Logs Link
-      scope: pod-logs
-      url: http://logging-facility?namespace=${metadata.namespace}&podName=${metadata.name}&startedAt=${status.startedAt}&finishedAt=${status.finishedAt}
-    - name: Event Source Logs Link
-      scope: event-source-logs
-      url: http://logging-facility?namespace=${metadata.namespace}&podName=${metadata.name}&startedAt=${status.startedAt}&finishedAt=${status.finishedAt}
-    - name: Sensor Logs Link
-      scope: sensor-logs
-      url: http://logging-facility?namespace=${metadata.namespace}&podName=${metadata.name}&startedAt=${status.startedAt}&finishedAt=${status.finishedAt}
   metricsConfig: |
     enabled: true
     path: /metrics
@@ -57,4 +41,5 @@ data:
     errored: 3
 kind: ConfigMap
 metadata:
-  name: argo-workflow-controller-configmap
+  name: {{ argo_controller_configmap }}
+  namespace: {{ namespace }}

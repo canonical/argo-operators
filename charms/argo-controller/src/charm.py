@@ -16,7 +16,9 @@ from charmed_kubeflow_chisme.components.charm_reconciler import CharmReconciler
 from charmed_kubeflow_chisme.components.kubernetes_component import KubernetesComponent
 from charmed_kubeflow_chisme.components.leadership_gate_component import LeadershipGateComponent
 from charmed_kubeflow_chisme.kubernetes import create_charm_default_labels
+from charms.grafana_k8s.v0.grafana_dashboard import GrafanaDashboardProvider
 from charms.observability_libs.v1.kubernetes_service_patch import KubernetesServicePatch
+from charms.prometheus_k8s.v0.prometheus_scrape import MetricsEndpointProvider
 from lightkube.models.core_v1 import ServicePort
 from lightkube.resources.apiextensions_v1 import CustomResourceDefinition
 from lightkube.resources.core_v1 import ConfigMap, Secret, ServiceAccount
@@ -30,7 +32,7 @@ from ops.charm import CharmBase
 from ops.main import main
 
 from components.pebble_component import (
-    LIVENESS_PROBE_PORT,
+    ARGO_CONTROLLER_CONFIGMAP,
     METRICS_PORT,
     ArgoControllerPebbleService,
 )
@@ -43,6 +45,7 @@ K8S_RESOURCE_FILES = [
     "src/templates/minio_configmap.yaml.j2",
     "src/templates/mlpipeline_minio_artifact_secret.yaml.j2",
 ]
+METRICS_PATH = "/metrics"
 
 
 class ArgoControllerOperator(CharmBase):
@@ -55,13 +58,27 @@ class ArgoControllerOperator(CharmBase):
         super().__init__(*args)
 
         # patch service ports
-        metrics_port = ServicePort(METRICS_PORT, name="metrics-port")
-        liveness_probe_port = ServicePort(LIVENESS_PROBE_PORT)
+        metrics_port = ServicePort(int(METRICS_PORT), name="metrics-port")
         self.service_patcher = KubernetesServicePatch(
             self,
-            [metrics_port, liveness_probe_port],
+            [metrics_port],
             service_name=self.app.name,
         )
+
+        self.prometheus_provider = MetricsEndpointProvider(
+            charm=self,
+            relation_name="metrics-endpoint",
+            jobs=[
+                {
+                    "metrics_path": METRICS_PATH,
+                    "static_configs": [{"targets": ["*:{}".format(METRICS_PORT)]}],
+                }
+            ],
+        )
+
+        # The provided dashboard template is based on https://grafana.com/grafana/dashboards/13927
+        # by user M4t3o
+        self.dashboard_provider = GrafanaDashboardProvider(self)
 
         self.charm_reconciler = CharmReconciler(self)
 
@@ -116,6 +133,7 @@ class ArgoControllerOperator(CharmBase):
                         )
                     ).decode("utf-8"),
                     "mlpipeline_minio_artifact_secret": "mlpipeline-minio-artifact-secret",
+                    "argo_controller_configmap": ARGO_CONTROLLER_CONFIGMAP,
                     "s3_bucket": self.model.config["bucket"],
                     "s3_minio_endpoint": (
                         f"{self.object_storage_relation.component.get_data()['service']}."
@@ -133,7 +151,7 @@ class ArgoControllerOperator(CharmBase):
             ],
         )
 
-        self.profile_controller_container = self.charm_reconciler.add(
+        self.argo_controller_container = self.charm_reconciler.add(
             component=ArgoControllerPebbleService(
                 charm=self,
                 name="container:argo-controller",

@@ -59,7 +59,7 @@ class ArgoControllerPebbleService(PebbleServiceComponent):
                     LIVENESS_PROBE_NAME: {
                         "override": "replace",
                         "period": "30s",
-                        "timeout": "30s",
+                        "timeout": "20s",
                         "threshold": 3,
                         "http": {
                             "url": f"http://localhost:{LIVENESS_PROBE_PORT}{LIVENESS_PROBE_PATH}"
