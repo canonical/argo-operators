@@ -1,0 +1,60 @@
+apiVersion: v1
+data:
+  artifactRepository: |
+    s3:
+      bucket: {{ s3_bucket }}
+      endpoint: {{ s3_minio_endpoint }}
+      insecure: {{ kubelet_insecure }}
+      accessKeySecret:
+        name: {{ mlpipeline_minio_artifact_secret }}
+        key: {{ access_key }}
+      secretKeySecret:
+        name: {{ mlpipeline_minio_artifact_secret }}
+        key: {{ secret_key }}
+  containerRuntimeExecutors: |
+    - name: {{ runtime_executor }}
+      selector:
+        matchLabels:
+          workflows.argoproj.io/container-runtime-executor: {{ runtime_executor }}
+  executor: |
+    resources:
+      requests:
+        cpu: 10m
+        memory: 64Mi
+  images: |
+    argoproj/argosay:v1:
+      command: [cowsay]
+    argoproj/argosay:v2:
+      command: [/argosay]
+    docker/whalesay:latest:
+       command: [cowsay]
+    python:alpine3.6:
+       command: [python3]
+  links: |
+    - name: Workflow Link
+      scope: workflow
+      url: http://logging-facility?namespace=${metadata.namespace}&workflowName=${metadata.name}&startedAt=${status.startedAt}&finishedAt=${status.finishedAt}
+    - name: Pod Link
+      scope: pod
+      url: http://logging-facility?namespace=${metadata.namespace}&podName=${metadata.name}&startedAt=${status.startedAt}&finishedAt=${status.finishedAt}
+    - name: Pod Logs Link
+      scope: pod-logs
+      url: http://logging-facility?namespace=${metadata.namespace}&podName=${metadata.name}&startedAt=${status.startedAt}&finishedAt=${status.finishedAt}
+    - name: Event Source Logs Link
+      scope: event-source-logs
+      url: http://logging-facility?namespace=${metadata.namespace}&podName=${metadata.name}&startedAt=${status.startedAt}&finishedAt=${status.finishedAt}
+    - name: Sensor Logs Link
+      scope: sensor-logs
+      url: http://logging-facility?namespace=${metadata.namespace}&podName=${metadata.name}&startedAt=${status.startedAt}&finishedAt=${status.finishedAt}
+  metricsConfig: |
+    enabled: true
+    path: /metrics
+    port: 9090
+  namespaceParallelism: "10"
+  retentionPolicy: |
+    completed: 10
+    failed: 3
+    errored: 3
+kind: ConfigMap
+metadata:
+  name: argo-workflow-controller-configmap
