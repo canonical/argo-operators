@@ -8,7 +8,7 @@ from ops.pebble import Layer
 logger = logging.getLogger(__name__)
 
 ARGO_CONTROLLER_CONFIGMAP = "argo-workflow-controller-configmap"
-EXECUTOR_IMAGE_CONFIG = "executor-image"
+EXECUTOR_IMAGE_CONFIG_NAME = "executor-image"
 LIVENESS_PROBE_PORT = "6060"
 METRICS_PORT = "9090"
 LIVENESS_PROBE_PATH = "/healthz"
@@ -47,7 +47,7 @@ class ArgoControllerPebbleService(PebbleServiceComponent):
                             "--configmap "
                             f"{ARGO_CONTROLLER_CONFIGMAP} "
                             "--executor-image "
-                            "{self.model.config[EXECUTOR_IMAGE_CONFIG_NAME]} "
+                            f"{self.model.config[EXECUTOR_IMAGE_CONFIG_NAME]} "
                             "--namespaced"
                         ),
                         "startup": "enabled",
