@@ -2,42 +2,68 @@
 # Copyright 2023 Canonical Ltd.
 # See LICENSE file for licensing details.
 
+"""Charm for the Argo Workflow Controller.
+
+https://github.com/canonical/argo-operators
+"""
+
 import logging
 from base64 import b64encode
-from glob import glob
-from pathlib import Path
 
-import yaml
+import lightkube
+from charmed_kubeflow_chisme.components import SdiRelationDataReceiverComponent
+from charmed_kubeflow_chisme.components.charm_reconciler import CharmReconciler
+from charmed_kubeflow_chisme.components.kubernetes_component import KubernetesComponent
+from charmed_kubeflow_chisme.components.leadership_gate_component import LeadershipGateComponent
+from charmed_kubeflow_chisme.kubernetes import create_charm_default_labels
 from charms.grafana_k8s.v0.grafana_dashboard import GrafanaDashboardProvider
+from charms.observability_libs.v1.kubernetes_service_patch import KubernetesServicePatch
 from charms.prometheus_k8s.v0.prometheus_scrape import MetricsEndpointProvider
-from oci_image import OCIImageResource, OCIImageResourceError
+from lightkube.models.core_v1 import ServicePort
+from lightkube.resources.apiextensions_v1 import CustomResourceDefinition
+from lightkube.resources.core_v1 import ConfigMap, Secret, ServiceAccount
+from lightkube.resources.rbac_authorization_v1 import (
+    ClusterRole,
+    ClusterRoleBinding,
+    Role,
+    RoleBinding,
+)
 from ops.charm import CharmBase
 from ops.main import main
-from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
-from serialized_data_interface import NoCompatibleVersions, NoVersionsListed, get_interfaces
 
+from components.pebble_component import (
+    ARGO_CONTROLLER_CONFIGMAP,
+    METRICS_PORT,
+    ArgoControllerPebbleService,
+)
+
+logger = logging.getLogger(__name__)
+
+K8S_RESOURCE_FILES = [
+    "src/templates/auth_manifests.yaml.j2",
+    "src/templates/crds.yaml",
+    "src/templates/minio_configmap.yaml.j2",
+    "src/templates/mlpipeline_minio_artifact_secret.yaml.j2",
+]
 METRICS_PATH = "/metrics"
-METRICS_PORT = "9090"
 
 
-class CheckFailed(Exception):
-    """Raise this exception if one of the checks in main fails."""
+class ArgoControllerOperator(CharmBase):
+    """Charm for the Argo Workflows controller.
 
-    def __init__(self, msg: str, status_type=None):
-        super().__init__()
+    https://github.com/canonical/argo-operators
+    """
 
-        self.msg = str(msg)
-        self.status_type = status_type
-        self.status = status_type(self.msg)
-
-
-class ArgoControllerCharm(CharmBase):
     def __init__(self, *args):
         super().__init__(*args)
 
-        self.log = logging.getLogger(__name__)
-
-        self.image = OCIImageResource(self, "oci-image")
+        # patch service ports
+        metrics_port = ServicePort(int(METRICS_PORT), name="metrics-port")
+        self.service_patcher = KubernetesServicePatch(
+            self,
+            [metrics_port],
+            service_name=self.app.name,
+        )
 
         self.prometheus_provider = MetricsEndpointProvider(
             charm=self,
@@ -54,260 +80,93 @@ class ArgoControllerCharm(CharmBase):
         # by user M4t3o
         self.dashboard_provider = GrafanaDashboardProvider(self)
 
-        for event in [
-            self.on.install,
-            self.on.leader_elected,
-            self.on.upgrade_charm,
-            self.on.config_changed,
-            self.on["object-storage"].relation_changed,
-        ]:
-            self.framework.observe(event, self.main)
+        self.charm_reconciler = CharmReconciler(self)
 
-    def main(self, event):
-        try:
-            self._check_leader()
-
-            interfaces = self._get_interfaces()
-
-            image_details = self._check_image_details()
-
-            os = self._check_object_storage(interfaces)
-
-        except CheckFailed as check_failed:
-            self.model.unit.status = check_failed.status
-            return
-
-        self.model.unit.status = MaintenanceStatus("Setting pod spec")
-
-        # Sync the argoproj/argoexec image to the same version
-        executor_image = self.model.config["executor-image"]
-
-        config_map = {
-            "containerRuntimeExecutor": self.model.config["executor"],
-            "kubeletInsecure": self.model.config["kubelet-insecure"],
-            "artifactRepository": {
-                "s3": {
-                    "bucket": self.model.config["bucket"],
-                    "keyFormat": self.model.config["key-format"],
-                    "endpoint": f"{os['service']}.{os['namespace']}:{os['port']}",
-                    "insecure": not os["secure"],
-                    "accessKeySecret": {
-                        "name": "mlpipeline-minio-artifact",
-                        "key": "accesskey",
-                    },
-                    "secretKeySecret": {
-                        "name": "mlpipeline-minio-artifact",
-                        "key": "secretkey",
-                    },
-                }
-            },
-        }
-
-        crd_root = "files/crds"
-        crds = [yaml.safe_load(Path(f).read_text()) for f in glob(f"{crd_root}/*.yaml")]
-        self.model.pod.set_spec(
-            {
-                "version": 3,
-                "serviceAccount": {
-                    "roles": [
-                        {
-                            "global": True,
-                            "rules": [
-                                {
-                                    "apiGroups": [""],
-                                    "resources": ["pods", "pods/exec"],
-                                    "verbs": [
-                                        "create",
-                                        "get",
-                                        "list",
-                                        "watch",
-                                        "update",
-                                        "patch",
-                                        "delete",
-                                    ],
-                                },
-                                {
-                                    "apiGroups": [""],
-                                    "resources": ["configmaps"],
-                                    "verbs": ["get", "watch", "list"],
-                                },
-                                {
-                                    "apiGroups": [""],
-                                    "resources": [
-                                        "persistentvolumeclaims",
-                                        "persistentvolumeclaims/finalizers",
-                                    ],
-                                    "verbs": ["create", "delete", "get", "update"],
-                                },
-                                {
-                                    "apiGroups": ["argoproj.io"],
-                                    "resources": [
-                                        "workflows",
-                                        "workflows/finalizers",
-                                        "workflowtasksets",
-                                        "workflowtasksets/finalizers",
-                                    ],
-                                    "verbs": [
-                                        "get",
-                                        "list",
-                                        "watch",
-                                        "update",
-                                        "patch",
-                                        "delete",
-                                        "create",
-                                    ],
-                                },
-                                {
-                                    "apiGroups": ["argoproj.io"],
-                                    "resources": [
-                                        "workflowtemplates",
-                                        "workflowtemplates/finalizers",
-                                        "clusterworkflowtemplates",
-                                        "clusterworkflowtemplates/finalizers",
-                                    ],
-                                    "verbs": [
-                                        "get",
-                                        "list",
-                                        "watch",
-                                    ],
-                                },
-                                {
-                                    "apiGroups": [""],
-                                    "resources": ["serviceaccounts"],
-                                    "verbs": ["get", "list"],
-                                },
-                                {
-                                    "apiGroups": ["argoproj.io"],
-                                    "resources": [
-                                        "cronworkflows",
-                                        "cronworkflows/finalizers",
-                                    ],
-                                    "verbs": [
-                                        "get",
-                                        "list",
-                                        "watch",
-                                        "update",
-                                        "patch",
-                                        "delete",
-                                    ],
-                                },
-                                {
-                                    "apiGroups": ["argoproj.io"],
-                                    "resources": [
-                                        "workflowtaskresults",
-                                    ],
-                                    "verbs": [
-                                        "list",
-                                        "watch",
-                                        "delete",
-                                    ],
-                                },
-                                {
-                                    "apiGroups": [""],
-                                    "resources": ["events"],
-                                    "verbs": ["create", "patch"],
-                                },
-                                {
-                                    "apiGroups": ["policy"],
-                                    "resources": ["poddisruptionbudgets"],
-                                    "verbs": ["create", "get", "delete"],
-                                },
-                                {
-                                    "apiGroups": ["coordination.k8s.io"],
-                                    "resources": ["leases"],
-                                    "verbs": ["create", "get", "update"],
-                                },
-                                {
-                                    "apiGroups": [""],
-                                    "resources": ["secrets"],
-                                    "verbs": ["get"],
-                                },
-                            ],
-                        }
-                    ],
-                },
-                "service": {
-                    "updateStrategy": {
-                        "type": "RollingUpdate",
-                        "rollingUpdate": {"maxUnavailable": 1},
-                    },
-                },
-                "containers": [
-                    {
-                        "name": self.model.app.name,
-                        "imageDetails": image_details,
-                        "imagePullPolicy": "Always",
-                        "args": [
-                            "--configmap",
-                            "argo-controller-configmap-config",
-                            "--executor-image",
-                            executor_image,
-                        ],
-                        "envConfig": {
-                            "ARGO_NAMESPACE": self.model.name,
-                            "LEADER_ELECTION_IDENTITY": self.model.app.name,
-                        },
-                        "volumeConfig": [
-                            {
-                                "name": "configmap",
-                                "mountPath": "/config-map.yaml",
-                                "files": [
-                                    {
-                                        "path": "config",
-                                        "content": yaml.dump(config_map),
-                                    }
-                                ],
-                            }
-                        ],
-                    },
-                ],
-                "kubernetesResources": {
-                    "customResourceDefinitions": [
-                        {"name": crd["metadata"]["name"], "spec": crd["spec"]} for crd in crds
-                    ],
-                    "secrets": [
-                        {
-                            "name": "mlpipeline-minio-artifact",
-                            "type": "Opaque",
-                            "data": {
-                                "accesskey": b64encode(os["access-key"].encode("utf-8")),
-                                "secretkey": b64encode(os["secret-key"].encode("utf-8")),
-                            },
-                        }
-                    ],
-                },
-            }
+        self.leadership_gate = self.charm_reconciler.add(
+            component=LeadershipGateComponent(
+                charm=self,
+                name="leadership-gate",
+            ),
+            depends_on=[],
         )
 
-        self.model.unit.status = ActiveStatus()
+        self.object_storage_relation = self.charm_reconciler.add(
+            component=SdiRelationDataReceiverComponent(
+                charm=self,
+                name="relation:object_storage",
+                relation_name="object-storage",
+            ),
+            depends_on=[self.leadership_gate],
+        )
 
-    def _check_leader(self):
-        if not self.unit.is_leader():
-            # We can't do anything useful when not the leader, so do nothing.
-            raise CheckFailed("Waiting for leadership", WaitingStatus)
+        self.kubernetes_resources = self.charm_reconciler.add(
+            component=KubernetesComponent(
+                charm=self,
+                name="kubernetes:auth-crds-cm-and-secrets",
+                resource_templates=K8S_RESOURCE_FILES,
+                krh_resource_types={
+                    ClusterRole,
+                    ClusterRoleBinding,
+                    ConfigMap,
+                    CustomResourceDefinition,
+                    Role,
+                    RoleBinding,
+                    Secret,
+                    ServiceAccount,
+                },
+                krh_labels=create_charm_default_labels(
+                    self.app.name,
+                    self.model.name,
+                    scope="auth-crds-cm-and-secrets",
+                ),
+                context_callable=self._context_callable,
+                lightkube_client=lightkube.Client(),
+            ),
+            depends_on=[
+                self.leadership_gate,
+                self.object_storage_relation,
+            ],
+        )
 
-    def _get_interfaces(self):
-        try:
-            interfaces = get_interfaces(self)
-        except NoVersionsListed as err:
-            raise CheckFailed(err, WaitingStatus)
-        except NoCompatibleVersions as err:
-            raise CheckFailed(err, BlockedStatus)
-        return interfaces
+        self.argo_controller_container = self.charm_reconciler.add(
+            component=ArgoControllerPebbleService(
+                charm=self,
+                name="container:argo-controller",
+                container_name="argo-controller",
+                service_name="argo-controller",
+            ),
+            depends_on=[
+                self.leadership_gate,
+                self.kubernetes_resources,
+                self.object_storage_relation,
+            ],
+        )
 
-    def _check_object_storage(self, interfaces):
-        if not ((os := interfaces["object-storage"]) and os.get_data()):
-            raise CheckFailed("Waiting for object-storage relation data", BlockedStatus)
+        self.charm_reconciler.install_default_event_handlers()
 
-        return list(os.get_data().values())[0]
-
-    def _check_image_details(self):
-        try:
-            image_details = self.image.fetch()
-        except OCIImageResourceError as e:
-            raise CheckFailed(f"{e.status.message}", e.status_type)
-        return image_details
+    @property
+    def _context_callable(self):
+        return lambda: {
+            "app_name": self.app.name,
+            "namespace": self.model.name,
+            "access_key": b64encode(
+                self.object_storage_relation.component.get_data()["access-key"].encode("utf-8")
+            ).decode("utf-8"),
+            "secret_key": b64encode(
+                self.object_storage_relation.component.get_data()["secret-key"].encode("utf-8")
+            ).decode("utf-8"),
+            "mlpipeline_minio_artifact_secret": "mlpipeline-minio-artifact-secret",
+            "argo_controller_configmap": ARGO_CONTROLLER_CONFIGMAP,
+            "s3_bucket": self.model.config["bucket"],
+            "s3_minio_endpoint": (
+                f"{self.object_storage_relation.component.get_data()['service']}."
+                f"{self.object_storage_relation.component.get_data()['namespace']}:"
+                f"{self.object_storage_relation.component.get_data()['port']}"
+            ),
+            "kubelet_insecure": self.model.config["kubelet-insecure"],
+            "runtime_executor": self.model.config["executor"],
+        }
 
 
 if __name__ == "__main__":
-    main(ArgoControllerCharm)
+    main(ArgoControllerOperator)
