@@ -150,14 +150,10 @@ class ArgoControllerOperator(CharmBase):
             "app_name": self.app.name,
             "namespace": self.model.name,
             "access_key": b64encode(
-                self.object_storage_relation.component.get_data()["access-key"].encode(
-                    "utf-8"
-                )
+                self.object_storage_relation.component.get_data()["access-key"].encode("utf-8")
             ).decode("utf-8"),
             "secret_key": b64encode(
-                self.object_storage_relation.component.get_data()["secret-key"].encode(
-                    "utf-8"
-                )
+                self.object_storage_relation.component.get_data()["secret-key"].encode("utf-8")
             ).decode("utf-8"),
             "mlpipeline_minio_artifact_secret": "mlpipeline-minio-artifact-secret",
             "argo_controller_configmap": ARGO_CONTROLLER_CONFIGMAP,
