@@ -119,7 +119,7 @@ class ArgoControllerOperator(CharmBase):
                     self.model.name,
                     scope="auth-crds-cm-and-secrets",
                 ),
-                context_callable= self._context_callable,
+                context_callable=self._context_callable,
                 lightkube_client=lightkube.Client(),
             ),
             depends_on=[
@@ -170,6 +170,7 @@ class ArgoControllerOperator(CharmBase):
             "kubelet_insecure": self.model.config["kubelet-insecure"],
             "runtime_executor": self.model.config["executor"],
         }
+
 
 if __name__ == "__main__":
     main(ArgoControllerOperator)
