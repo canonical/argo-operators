@@ -90,6 +90,7 @@ class Operator(CharmBase):
                                         "workfloweventbindings",
                                         "workflowtemplates",
                                         "cronworkflows",
+                                        "cronworkflows/finalizers",
                                         "clusterworkflowtemplates",
                                     ],
                                     "verbs": [
