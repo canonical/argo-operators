@@ -12,7 +12,7 @@ resources:
     type: oci-image
     description: 'Backing OCI image'
     auto-fetch: true
-    upstream-source: argoproj/workflow-controller:v3.3.8
+    upstream-source: argoproj/workflow-controller:v3.3.10
 containers:
   argo-controller:
     resource: oci-image

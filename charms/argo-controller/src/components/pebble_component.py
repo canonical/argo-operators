@@ -16,12 +16,12 @@ LIVENESS_PROBE_NAME = "argo-controller-up"
 
 
 class ArgoControllerPebbleService(PebbleServiceComponent):
+    """Pebble service container component to configure Pebble layer"""
     def __init__(
         self,
         *args,
         **kwargs,
     ):
-        """Pebble service container component in order to configure Pebble layer"""
         super().__init__(*args, **kwargs)
         self.environment = {
             "ARGO_NAMESPACE": self.model.name,

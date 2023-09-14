@@ -119,30 +119,7 @@ class ArgoControllerOperator(CharmBase):
                     self.model.name,
                     scope="auth-crds-cm-and-secrets",
                 ),
-                context_callable=lambda: {
-                    "app_name": self.app.name,
-                    "namespace": self.model.name,
-                    "access_key": b64encode(
-                        self.object_storage_relation.component.get_data()["access-key"].encode(
-                            "utf-8"
-                        )
-                    ).decode("utf-8"),
-                    "secret_key": b64encode(
-                        self.object_storage_relation.component.get_data()["secret-key"].encode(
-                            "utf-8"
-                        )
-                    ).decode("utf-8"),
-                    "mlpipeline_minio_artifact_secret": "mlpipeline-minio-artifact-secret",
-                    "argo_controller_configmap": ARGO_CONTROLLER_CONFIGMAP,
-                    "s3_bucket": self.model.config["bucket"],
-                    "s3_minio_endpoint": (
-                        f"{self.object_storage_relation.component.get_data()['service']}."
-                        f"{self.object_storage_relation.component.get_data()['namespace']}:"
-                        f"{self.object_storage_relation.component.get_data()['port']}"
-                    ),
-                    "kubelet_insecure": self.model.config["kubelet-insecure"],
-                    "runtime_executor": self.model.config["executor"],
-                },
+                context_callable= self._context_callable,
                 lightkube_client=lightkube.Client(),
             ),
             depends_on=[
@@ -167,6 +144,32 @@ class ArgoControllerOperator(CharmBase):
 
         self.charm_reconciler.install_default_event_handlers()
 
+    @property
+    def _context_callable(self):
+        return lambda: {
+            "app_name": self.app.name,
+            "namespace": self.model.name,
+            "access_key": b64encode(
+                self.object_storage_relation.component.get_data()["access-key"].encode(
+                    "utf-8"
+                )
+            ).decode("utf-8"),
+            "secret_key": b64encode(
+                self.object_storage_relation.component.get_data()["secret-key"].encode(
+                    "utf-8"
+                )
+            ).decode("utf-8"),
+            "mlpipeline_minio_artifact_secret": "mlpipeline-minio-artifact-secret",
+            "argo_controller_configmap": ARGO_CONTROLLER_CONFIGMAP,
+            "s3_bucket": self.model.config["bucket"],
+            "s3_minio_endpoint": (
+                f"{self.object_storage_relation.component.get_data()['service']}."
+                f"{self.object_storage_relation.component.get_data()['namespace']}:"
+                f"{self.object_storage_relation.component.get_data()['port']}"
+            ),
+            "kubelet_insecure": self.model.config["kubelet-insecure"],
+            "runtime_executor": self.model.config["executor"],
+        }
 
 if __name__ == "__main__":
     main(ArgoControllerOperator)
