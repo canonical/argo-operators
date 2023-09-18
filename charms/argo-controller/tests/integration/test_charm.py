@@ -35,6 +35,7 @@ async def test_build_and_deploy_with_relations(ops_test: OpsTest):
         entity_url=built_charm_path,
         application_name=APP_NAME,
         resources=resources,
+        trust=True,
     )
 
     # Deploy required relations
