@@ -37,10 +37,18 @@ async def test_build_and_deploy_with_relations(ops_test: OpsTest):
         resources=resources,
         trust=True,
     )
+    await ops_test.model.deploy(
+        entity_url="kfp-profile-controller",
+        channel="latest/edge",
+        trust=True,
+    )
 
     # Deploy required relations
     await ops_test.model.deploy(entity_url="minio", config=MINIO_CONFIG)
     await ops_test.model.add_relation(f"{APP_NAME}:object-storage", "minio:object-storage")
+    await ops_test.model.add_relation(
+        "kfp-profile-controller:object-storage", "minio:object-storage"
+    )
 
     await ops_test.model.wait_for_idle(timeout=60 * 10)
     # TODO: This does not handle blocked status right.  Sometimes it passes when argo-controller
