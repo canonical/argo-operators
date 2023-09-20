@@ -8,7 +8,6 @@ https://github.com/canonical/argo-operators
 """
 
 import logging
-from base64 import b64encode
 
 import lightkube
 from charmed_kubeflow_chisme.components import SdiRelationDataReceiverComponent
@@ -43,7 +42,6 @@ K8S_RESOURCE_FILES = [
     "src/templates/auth_manifests.yaml.j2",
     "src/templates/crds.yaml",
     "src/templates/minio_configmap.yaml.j2",
-    "src/templates/mlpipeline_minio_artifact_secret.yaml.j2",
 ]
 METRICS_PATH = "/metrics"
 
@@ -149,13 +147,7 @@ class ArgoControllerOperator(CharmBase):
         return lambda: {
             "app_name": self.app.name,
             "namespace": self.model.name,
-            "access_key": b64encode(
-                self.object_storage_relation.component.get_data()["access-key"].encode("utf-8")
-            ).decode("utf-8"),
-            "secret_key": b64encode(
-                self.object_storage_relation.component.get_data()["secret-key"].encode("utf-8")
-            ).decode("utf-8"),
-            "mlpipeline_minio_artifact_secret": "mlpipeline-minio-artifact-secret",
+            "mlpipeline_minio_artifact_secret": "mlpipeline-minio-artifact",
             "argo_controller_configmap": ARGO_CONTROLLER_CONFIGMAP,
             "s3_bucket": self.model.config["bucket"],
             "s3_minio_endpoint": (

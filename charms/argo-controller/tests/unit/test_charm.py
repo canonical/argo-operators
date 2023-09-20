@@ -140,7 +140,7 @@ def test_kubernetes_created_method(
 
     # Assert
     # FIXME: why is it counting 50?
-    assert mocked_lightkube_client.apply.call_count == 50
+    assert mocked_lightkube_client.apply.call_count == 48
     assert isinstance(harness.charm.kubernetes_resources.status, ActiveStatus)
 
 
