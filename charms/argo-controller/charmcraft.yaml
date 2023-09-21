@@ -11,4 +11,5 @@ bases:
         channel: "20.04"
 parts:
   charm:
-    charm-python-packages: [setuptools, pip, setuptools-scm<8.0]
+    charm-python-packages: [setuptools, pip]
+    charm-binary-python-packages: [setuptools-scm==8.0.2]
