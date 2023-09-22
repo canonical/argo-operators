@@ -16,6 +16,11 @@ options:
     description: |
       Runtime executor for workflow containers. Cannot be `docker` on containerd,
       for a full list of executors, see https://github.com/argoproj/argo/tree/master/workflow/executor
+  executor-image:
+    type: string
+    default: argoproj/argoexec:v3.3.9
+    description: |
+      Image to use for runtime executor. Should be updated alongside updating the rest of the charm's images.
   kubelet-insecure:
     type: boolean
     default: false
