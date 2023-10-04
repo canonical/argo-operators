@@ -75,6 +75,10 @@ jobs:
       run: kubectl get all -A
       if: failure()
 
+    - name: Get all workflows
+      run: kubectl get workflows -A -oyaml
+      if: failure()
+
     - name: Describe deployments
       run: kubectl describe deployments -A
       if: failure()
