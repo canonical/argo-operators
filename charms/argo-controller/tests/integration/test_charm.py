@@ -12,7 +12,7 @@ import requests
 import tenacity
 import yaml
 from jinja2 import Template
-from lightkube import ApiError, Client, codecs
+from lightkube import ApiError, codecs
 from pytest_operator.plugin import OpsTest
 
 log = logging.getLogger(__name__)
@@ -57,21 +57,27 @@ async def test_build_and_deploy_with_relations(ops_test: OpsTest):
 async def create_mlpipeline_minio_secret():
     """Creates a Secret with name mlpipeline-minio-artifact.
 
-        This simulates the behaviour of having the kfp-profile-controller
-        present in the deployment for providing this Secret, but without
-        having to actually deploy it in the testing environment.
+    This simulates the behaviour of having the kfp-profile-controller
+    present in the deployment for providing this Secret, but without
+    having to actually deploy it in the testing environment.
     """
     lightkube_client = lightkube.Client()
     secret_file = Path("./tests/integration/secret.yaml").read_text()
     secret_template = Template(secret_file)
-    rendered_secret_template = template.render(context={"access_key": b64encode(MINIO_CONFIG["access-key"].encode("utf-8")), "secret_key": b64encode(MINIO_CONFIG["secret-key"].encode("utf-8"))})
+    rendered_secret_template = secret_template.render(
+        context={
+            "access_key": b64encode(MINIO_CONFIG["access-key"].encode("utf-8")),
+            "secret_key": b64encode(MINIO_CONFIG["secret-key"].encode("utf-8")),
+        }
+    )
 
     for obj in codecs.load_all_yaml(rendered_secret_template):
         try:
             lightkube_client.apply(obj)
-        except lightkube.core.exceptions.ApiError as e:
+        except ApiError as e:
             raise e
-    
+
+
 async def create_artifact_bucket(ops_test: OpsTest):
     # Ensure bucket is available
     model_name = ops_test.model_name
