@@ -26,7 +26,6 @@ MINIO_CONFIG = {
     "secret-key": "minio-secret-key",
 }
 
-
 @pytest.mark.abort_on_fail
 async def test_build_and_deploy_with_relations(ops_test: OpsTest):
     built_charm_path = await ops_test.build_charm(CHARM_ROOT)
@@ -64,17 +63,15 @@ async def create_mlpipeline_minio_secret(ops_test: OpsTest):
     lightkube_client = lightkube.Client()
     secret_file = Path("./tests/integration/secret.yaml").read_text()
     secret_template = Template(secret_file)
-    rendered_secret_template = secret_template.render(
-        context={
-            "access_key": b64encode(MINIO_CONFIG["access-key"].encode("utf-8")),
-            "secret_key": b64encode(MINIO_CONFIG["secret-key"].encode("utf-8")),
-            "namespace": ops_test.model_name,
-        }
-    )
-
+    context={
+        "access_key": b64encode(MINIO_CONFIG["access-key"].encode("utf-8")).decode("utf-8"),
+        "secret_key": b64encode(MINIO_CONFIG["secret-key"].encode("utf-8")).decode("utf-8"),
+        "namespace": ops_test.model_name,
+    }
+    rendered_secret_template = secret_template.render(**context)
     for obj in codecs.load_all_yaml(rendered_secret_template):
         try:
-            lightkube_client.apply(obj)
+            lightkube_client.apply(obj, field_manager='test')
         except ApiError as e:
             raise e
 
@@ -153,13 +150,12 @@ async def submit_workflow_using_artifact(ops_test: OpsTest):
 
 async def test_workflow_using_artifacts(ops_test: OpsTest):
     # Create the mlpipeline-minio-artifact secret
-    await create_mlpipeline_minio_secret()
+    await create_mlpipeline_minio_secret(ops_test)
     # Argo will fail if the artifact bucket it uses does not exist
     await create_artifact_bucket(ops_test)
 
     # Submit argo workflow using artifacts and wait for it to finish
     await submit_workflow_using_artifact(ops_test)
-
 
 async def test_prometheus_grafana_integration(ops_test: OpsTest):
     """Deploy prometheus, grafana and required relations, then test the metrics."""
