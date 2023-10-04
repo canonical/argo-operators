@@ -3,12 +3,16 @@
 
 import json
 import logging
+from base64 import b64encode
 from pathlib import Path
 
+import lightkube
 import pytest
 import requests
 import tenacity
 import yaml
+from jinja2 import Template
+from lightkube import ApiError, Client, codecs
 from pytest_operator.plugin import OpsTest
 
 log = logging.getLogger(__name__)
@@ -38,29 +42,9 @@ async def test_build_and_deploy_with_relations(ops_test: OpsTest):
         trust=True,
     )
 
-    # Deploy kfp-profile-controller and its dependencies
-    await ops_test.model.deploy(
-        entity_url="kfp-profile-controller",
-        channel="latest/edge",
-        trust=True,
-    )
-    await ops_test.model.deploy(entity_url="admission-webhook", channel="latest/edge", trust=True)
-    # TODO: The webhook charm must be active before the metacontroller is deployed, due to the bug
-    # described here: https://github.com/canonical/metacontroller-operator/issues/86
-    # Drop this wait_for_idle once the above issue is closed
-    await ops_test.model.wait_for_idle(apps=["admission-webhook"], status="active")
-    await ops_test.model.deploy(
-        entity_url="metacontroller-operator",
-        channel="latest/edge",
-        trust=True,
-    )
-
     # Deploy required relations
     await ops_test.model.deploy(entity_url="minio", config=MINIO_CONFIG)
     await ops_test.model.add_relation(f"{APP_NAME}:object-storage", "minio:object-storage")
-    await ops_test.model.add_relation(
-        "kfp-profile-controller:object-storage", "minio:object-storage"
-    )
 
     await ops_test.model.wait_for_idle(timeout=60 * 10)
     # TODO: This does not handle blocked status right.  Sometimes it passes when argo-controller
@@ -70,6 +54,24 @@ async def test_build_and_deploy_with_relations(ops_test: OpsTest):
     await ops_test.model.wait_for_idle(apps=[APP_NAME], status="active", timeout=1000)
 
 
+async def create_mlpipeline_minio_secret():
+    """Creates a Secret with name mlpipeline-minio-artifact.
+
+        This simulates the behaviour of having the kfp-profile-controller
+        present in the deployment for providing this Secret, but without
+        having to actually deploy it in the testing environment.
+    """
+    lightkube_client = lightkube.Client()
+    secret_file = Path("./tests/integration/secret.yaml").read_text()
+    secret_template = Template(secret_file)
+    rendered_secret_template = template.render(context={"access_key": b64encode(MINIO_CONFIG["access-key"].encode("utf-8")), "secret_key": b64encode(MINIO_CONFIG["secret-key"].encode("utf-8"))})
+
+    for obj in codecs.load_all_yaml(rendered_secret_template):
+        try:
+            lightkube_client.apply(obj)
+        except lightkube.core.exceptions.ApiError as e:
+            raise e
+    
 async def create_artifact_bucket(ops_test: OpsTest):
     # Ensure bucket is available
     model_name = ops_test.model_name
@@ -143,6 +145,8 @@ async def submit_workflow_using_artifact(ops_test: OpsTest):
 
 
 async def test_workflow_using_artifacts(ops_test: OpsTest):
+    # Create the mlpipeline-minio-artifact secret
+    await create_mlpipeline_minio_secret()
     # Argo will fail if the artifact bucket it uses does not exist
     await create_artifact_bucket(ops_test)
 

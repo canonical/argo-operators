@@ -144,6 +144,9 @@ class ArgoControllerOperator(CharmBase):
 
     @property
     def _context_callable(self):
+        # The mlpipeline_minio_artifact_secret is hardcoded to mlpipeline-minio-artifact
+        # because that is the name the secret will have when deployed by kfp-profile-controller
+        # We are assuming that argo-workflows is always going to be deployed alongside kfp-operators
         return lambda: {
             "app_name": self.app.name,
             "namespace": self.model.name,
