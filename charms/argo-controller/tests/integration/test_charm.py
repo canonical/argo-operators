@@ -54,7 +54,7 @@ async def test_build_and_deploy_with_relations(ops_test: OpsTest):
     await ops_test.model.wait_for_idle(apps=[APP_NAME], status="active", timeout=1000)
 
 
-async def create_mlpipeline_minio_secret():
+async def create_mlpipeline_minio_secret(ops_test: OpsTest):
     """Creates a Secret with name mlpipeline-minio-artifact.
 
     This simulates the behaviour of having the kfp-profile-controller
@@ -68,6 +68,7 @@ async def create_mlpipeline_minio_secret():
         context={
             "access_key": b64encode(MINIO_CONFIG["access-key"].encode("utf-8")),
             "secret_key": b64encode(MINIO_CONFIG["secret-key"].encode("utf-8")),
+            "namespace": ops_test.model_name,
         }
     )
 
