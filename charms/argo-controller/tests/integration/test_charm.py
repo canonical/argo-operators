@@ -37,8 +37,20 @@ async def test_build_and_deploy_with_relations(ops_test: OpsTest):
         resources=resources,
         trust=True,
     )
+
+    # Deploy kfp-profile-controller and its dependencies
     await ops_test.model.deploy(
         entity_url="kfp-profile-controller",
+        channel="latest/edge",
+        trust=True,
+    )
+    await ops_test.model.deploy(entity_url="admission-webhook", channel="latest/edge", trust=True)
+    # TODO: The webhook charm must be active before the metacontroller is deployed, due to the bug
+    # described here: https://github.com/canonical/metacontroller-operator/issues/86
+    # Drop this wait_for_idle once the above issue is closed
+    await ops_test.model.wait_for_idle(apps=["admission-webhook"], status="active")
+    await ops_test.model.deploy(
+        entity_url="metacontroller-operator",
         channel="latest/edge",
         trust=True,
     )
