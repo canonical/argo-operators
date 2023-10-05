@@ -155,7 +155,7 @@ class ArgoControllerOperator(CharmBase):
             "secret_key": b64encode(
                 self.object_storage_relation.component.get_data()["secret-key"].encode("utf-8")
             ).decode("utf-8"),
-            "mlpipeline_minio_artifact_secret": "mlpipeline-minio-artifact-secret",
+            "mlpipeline_minio_artifact_secret": "mlpipeline-minio-artifact",
             "argo_controller_configmap": ARGO_CONTROLLER_CONFIGMAP,
             "s3_bucket": self.model.config["bucket"],
             "s3_minio_endpoint": (
