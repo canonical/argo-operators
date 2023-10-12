@@ -48,8 +48,7 @@ class ArgoControllerPebbleService(PebbleServiceComponent):
                             "--configmap "
                             f"{ARGO_CONTROLLER_CONFIGMAP} "
                             "--executor-image "
-                            f"{self.model.config[EXECUTOR_IMAGE_CONFIG_NAME]} "
-                            "--namespaced"
+                            f"{self.model.config[EXECUTOR_IMAGE_CONFIG_NAME]}"
                         ),
                         "startup": "enabled",
                         "environment": self.environment,
