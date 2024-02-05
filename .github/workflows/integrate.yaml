@@ -28,7 +28,7 @@ jobs:
         charm: [argo-controller, argo-server]
     steps:
     - name: Check out repo
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - run: |
         sudo apt update
         sudo apt install tox
@@ -42,7 +42,7 @@ jobs:
         charm: [argo-controller, argo-server]
     steps:
     - name: Check out repo
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - run: |
         sudo apt update
         sudo apt install tox
@@ -55,7 +55,7 @@ jobs:
       matrix:
         charm: [argo-controller]
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Setup operator environment
       uses: charmed-kubernetes/actions-operator@main
       with:
