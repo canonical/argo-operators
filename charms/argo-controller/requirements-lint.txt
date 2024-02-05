@@ -4,7 +4,7 @@
 #
 #    pip-compile requirements-lint.in
 #
-black==23.12.1
+black==24.1.1
     # via -r requirements-lint.in
 click==8.1.7
     # via black
@@ -34,7 +34,7 @@ pathspec==0.12.1
     # via black
 pep8-naming==0.13.3
     # via -r requirements-lint.in
-platformdirs==4.1.0
+platformdirs==4.2.0
     # via black
 pycodestyle==2.11.1
     # via flake8
