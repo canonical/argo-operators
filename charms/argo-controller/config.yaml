@@ -19,7 +19,7 @@ options:
       https://argoproj.github.io/argo-workflows/workflow-executors/#workflow-executors
   executor-image:
     type: string
-    default: argoproj/argoexec:v3.3.10
+    default: charmedkubeflow/argoexec:3.3.10-c88862f
     description: |
       Image to use for runtime executor. Should be updated alongside updating the rest of the charm's images.
   kubelet-insecure:
