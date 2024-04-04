@@ -997,7 +997,7 @@
         {
           "datasource": "${prometheusds}",
           "exemplar": true,
-          "expr": "  rate(argo_workflows_queue_latency_sum{queue_name=\"workflow_ttl_queue\",kubernetes_namespace=~\"^$ns$\",origin_prometheus=~\"^$dc$\"}[2m])\n/\n  rate(argo_workflows_queue_latency_count{queue_name=\"workflow_ttl_queue\",kubernetes_namespace=~\"^$ns$\",origin_prometheus=~\"^$dc$\"}[2m])",
+          "expr": "  rate(argo_workflows_queue_latency_sum{queue_name=\"cron_wf_queue\",kubernetes_namespace=~\"^$ns$\",origin_prometheus=~\"^$dc$\"}[2m])\n/\n  rate(argo_workflows_queue_latency_count{queue_name=\"cron_wf_queue\",kubernetes_namespace=~\"^$ns$\",origin_prometheus=~\"^$dc$\"}[2m])",
           "hide": false,
           "interval": "1m",
           "legendFormat": "{{origin_prometheus}} : {{app}} : {{kubernetes_namespace}} : {{queue_name}}",
