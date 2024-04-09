@@ -980,7 +980,7 @@
         {
           "datasource": "${prometheusds}",
           "exemplar": true,
-          "expr": "  rate(argo_workflows_queue_latency_sum{queue_name=\"cron_wf_queue\",kubernetes_namespace=~\"^$ns$\"}[1m])\n/\n  rate(argo_workflows_queue_latency_count{queue_name=\"cron_wf_queue\",kubernetes_namespace=~\"^$ns$\",origin_prometheus=~\"^$dc$\"}[1m])",
+          "expr": "  rate(argo_workflows_queue_latency_sum{queue_name=\"cron_wf_queue\",kubernetes_namespace=~\"^$ns$\"}[2m])\n/\n  rate(argo_workflows_queue_latency_count{queue_name=\"cron_wf_queue\",kubernetes_namespace=~\"^$ns$\",origin_prometheus=~\"^$dc$\"}[2m])",
           "interval": "1m",
           "legendFormat": "{{origin_prometheus}} : {{app}} : {{kubernetes_namespace}} : {{queue_name}}",
           "queryType": "randomWalk",
@@ -989,7 +989,7 @@
         {
           "datasource": "${prometheusds}",
           "exemplar": true,
-          "expr": "  rate(argo_workflows_queue_latency_sum{queue_name=\"pod_queue\",kubernetes_namespace=~\"^$ns$\",origin_prometheus=~\"^$dc$\"}[1m])\n/\n  rate(argo_workflows_queue_latency_count{queue_name=\"pod_queue\",kubernetes_namespace=~\"^$ns$\",origin_prometheus=~\"^$dc$\"}[1m])",
+          "expr": "  rate(argo_workflows_queue_latency_sum{queue_name=\"pod_cleanup_queue\",kubernetes_namespace=~\"^$ns$\",origin_prometheus=~\"^$dc$\"}[2m])\n/\n  rate(argo_workflows_queue_latency_count{queue_name=\"pod_cleanup_queue\",kubernetes_namespace=~\"^$ns$\",origin_prometheus=~\"^$dc$\"}[2m])",
           "interval": "1m",
           "legendFormat": "{{origin_prometheus}} : {{app}} : {{kubernetes_namespace}} : {{queue_name}}",
           "refId": "B"
@@ -997,7 +997,7 @@
         {
           "datasource": "${prometheusds}",
           "exemplar": true,
-          "expr": "  rate(argo_workflows_queue_latency_sum{queue_name=\"wf_cron_queue\",kubernetes_namespace=~\"^$ns$\",origin_prometheus=~\"^$dc$\"}[1m])\n/\n  rate(argo_workflows_queue_latency_count{queue_name=\"wf_cron_queue\",kubernetes_namespace=~\"^$ns$\",origin_prometheus=~\"^$dc$\"}[1m])",
+          "expr": "  rate(argo_workflows_queue_latency_sum{queue_name=\"cron_wf_queue\",kubernetes_namespace=~\"^$ns$\",origin_prometheus=~\"^$dc$\"}[2m])\n/\n  rate(argo_workflows_queue_latency_count{queue_name=\"cron_wf_queue\",kubernetes_namespace=~\"^$ns$\",origin_prometheus=~\"^$dc$\"}[2m])",
           "hide": false,
           "interval": "1m",
           "legendFormat": "{{origin_prometheus}} : {{app}} : {{kubernetes_namespace}} : {{queue_name}}",
@@ -1006,7 +1006,7 @@
         {
           "datasource": "${prometheusds}",
           "exemplar": true,
-          "expr": "  rate(argo_workflows_queue_latency_sum{queue_name=\"workflow_queue\",kubernetes_namespace=~\"^$ns$\",origin_prometheus=~\"^$dc$\"}[1m])\n/\n  rate(argo_workflows_queue_latency_count{queue_name=\"workflow_queue\",kubernetes_namespace=~\"^$ns$\",origin_prometheus=~\"^$dc$\"}[1m])",
+          "expr": "  rate(argo_workflows_queue_latency_sum{queue_name=\"workflow_queue\",kubernetes_namespace=~\"^$ns$\",origin_prometheus=~\"^$dc$\"}[2m])\n/\n  rate(argo_workflows_queue_latency_count{queue_name=\"workflow_queue\",kubernetes_namespace=~\"^$ns$\",origin_prometheus=~\"^$dc$\"}[2m])",
           "hide": false,
           "interval": "1m",
           "legendFormat": "{{origin_prometheus}} : {{app}} : {{kubernetes_namespace}} : {{queue_name}}",
@@ -1112,7 +1112,7 @@
         {
           "datasource": "${prometheusds}",
           "exemplar": true,
-          "expr": "rate(log_messages{kubernetes_namespace=~\"$ns\",origin_prometheus=~\"^$dc$\"}[1m])",
+          "expr": "log_messages{kubernetes_namespace=~\"$ns\",origin_prometheus=~\"^$dc$\"}",
           "interval": "1m",
           "legendFormat": "{{origin_prometheus}} : {{app}} : {{kubernetes_namespace}} : {{level}}",
           "queryType": "randomWalk",
@@ -1159,6 +1159,7 @@
   "schemaVersion": 33,
   "style": "dark",
   "tags": [
+    "ckf",
     "argo"
   ],
   "templating": {
