@@ -1,6 +1,6 @@
 # Copyright 2024 Canonical Ltd.
 # See LICENSE file for licensing details.
-
+"""Constants module including constants used in tests."""
 from pathlib import Path
 
 import yaml
@@ -10,7 +10,7 @@ CHARM_ROOT = "."
 ARGO_CONTROLLER = "argo-controller"
 ARGO_CONTROLLER_TRUST = True
 MINIO = "minio"
-MINIO_CHANNEL = "ckf-1.8/stable"
+MINIO_CHANNEL = "latest/edge"
 MINIO_CONFIG = {
     "access-key": "minio",
     "secret-key": "minio-secret-key",
