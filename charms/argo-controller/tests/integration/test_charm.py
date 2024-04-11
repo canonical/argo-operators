@@ -3,7 +3,6 @@
 
 import json
 import logging
-from pathlib import Path
 
 import pytest
 import requests
@@ -11,43 +10,42 @@ import tenacity
 import yaml
 from pytest_operator.plugin import OpsTest
 
+from . import constants
+
 log = logging.getLogger(__name__)
-
-METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
-CHARM_ROOT = "."
-APP_NAME = "argo-controller"
-
-MINIO_CONFIG = {
-    "access-key": "minio",
-    "secret-key": "minio-secret-key",
-}
 
 
 @pytest.mark.abort_on_fail
 async def test_build_and_deploy_with_relations(ops_test: OpsTest):
-    built_charm_path = await ops_test.build_charm(CHARM_ROOT)
+    built_charm_path = await ops_test.build_charm(constants.CHARM_ROOT)
     log.info(f"Built charm {built_charm_path}")
 
-    image_path = METADATA["resources"]["oci-image"]["upstream-source"]
+    image_path = constants.METADATA["resources"]["oci-image"]["upstream-source"]
     resources = {"oci-image": image_path}
 
     await ops_test.model.deploy(
         entity_url=built_charm_path,
-        application_name=APP_NAME,
+        application_name=constants.ARGO_CONTROLLER,
         resources=resources,
-        trust=True,
+        trust=constants.ARGO_CONTROLLER_TRUST,
     )
 
     # Deploy required relations
-    await ops_test.model.deploy(entity_url="minio", config=MINIO_CONFIG)
-    await ops_test.model.add_relation(f"{APP_NAME}:object-storage", "minio:object-storage")
+    await ops_test.model.deploy(
+        entity_url=constants.MINIO, config=constants.constants.MINIO_CONFIG
+    )
+    await ops_test.model.add_relation(
+        f"{constants.ARGO_CONTROLLER}:object-storage", f"{constants.MINIO}:object-storage"
+    )
 
     await ops_test.model.wait_for_idle(timeout=60 * 10)
     # TODO: This does not handle blocked status right.  Sometimes it passes when argo-controller
     #  is still setting up
 
     # The unit should be active before creating/testing resources
-    await ops_test.model.wait_for_idle(apps=[APP_NAME], status="active", timeout=1000)
+    await ops_test.model.wait_for_idle(
+        apps=[constants.ARGO_CONTROLLER], status="active", timeout=1000
+    )
 
 
 async def create_artifact_bucket(ops_test: OpsTest):
@@ -60,7 +58,7 @@ async def create_artifact_bucket(ops_test: OpsTest):
     bucket = "mlpipeline"
 
     minio_cmd = (
-        f"mc alias set {alias} {url} {MINIO_CONFIG['access-key']} {MINIO_CONFIG['secret-key']}"
+        f"mc alias set {alias} {url} {constants.MINIO_CONFIG['access-key']} {constants.MINIO_CONFIG['secret-key']}"  # noqa
         f"&& mc mb {alias}/{bucket} -p"
     )
     kubectl_cmd = (
@@ -132,31 +130,43 @@ async def test_workflow_using_artifacts(ops_test: OpsTest):
 
 async def test_prometheus_grafana_integration(ops_test: OpsTest):
     """Deploy prometheus, grafana and required relations, then test the metrics."""
-    prometheus = "prometheus-k8s"
-    grafana = "grafana-k8s"
-    prometheus_scrape = "prometheus-scrape-config-k8s"
-    scrape_config = {"scrape_interval": "30s"}
-
     # Deploy and relate prometheus
-    await ops_test.model.deploy(prometheus, channel="latest/stable", trust=True)
-    await ops_test.model.deploy(grafana, channel="latest/stable", trust=True)
-    await ops_test.model.deploy(prometheus_scrape, channel="latest/stable", config=scrape_config)
+    await ops_test.model.deploy(
+        constants.PROMETHEUS_K8S,
+        channel=constants.PROMETHEUS_K8S_CHANNEL,
+        trust=constants.PROMETHEUS_K8S_TRUST,
+    )
+    await ops_test.model.deploy(
+        constants.GRAFANA_K8S,
+        channel=constants.GRAFANA_K8S_CHANNEL,
+        trust=constants.GRAFANA_K8S_TRUST,
+    )
+    await ops_test.model.deploy(
+        constants.PROMETHEUS_SCRAPE_K8S,
+        channel=constants.PROMETHEUS_SCRAPE_K8S_CHANNEL,
+        config=constants.PROMETHEUS_SCRAPE_CONFIG,
+    )
 
-    await ops_test.model.add_relation(APP_NAME, prometheus_scrape)
+    await ops_test.model.add_relation(constants.ARGO_CONTROLLER, constants.PROMETHEUS_SCRAPE_K8S)
     await ops_test.model.add_relation(
-        f"{prometheus}:grafana-dashboard", f"{grafana}:grafana-dashboard"
+        f"{constants.PROMETHEUS_K8S}:grafana-dashboard",
+        f"{constants.GRAFANA_K8S}:grafana-dashboard",
     )
     await ops_test.model.add_relation(
-        f"{APP_NAME}:grafana-dashboard", f"{grafana}:grafana-dashboard"
+        f"{constants.ARGO_CONTROLLER}:grafana-dashboard",
+        f"{constants.GRAFANA_K8S}:grafana-dashboard",
     )
     await ops_test.model.add_relation(
-        f"{prometheus}:metrics-endpoint", f"{prometheus_scrape}:metrics-endpoint"
+        f"{constants.PROMETHEUS_K8S}:metrics-endpoint",
+        f"{constants.PROMETHEUS_SCRAPE_K8S}:metrics-endpoint",
     )
 
     await ops_test.model.wait_for_idle(status="active", timeout=60 * 20)
 
     status = await ops_test.model.get_status()
-    prometheus_unit_ip = status["applications"][prometheus]["units"][f"{prometheus}/0"]["address"]
+    prometheus_unit_ip = status["applications"][constants.PROMETHEUS_K8S]["units"][
+        f"{constants.PROMETHEUS_K8S}/0"
+    ]["address"]
     log.info(f"Prometheus available at http://{prometheus_unit_ip}:9090")
 
     for attempt in retry_for_5_attempts:
@@ -166,7 +176,7 @@ async def test_prometheus_grafana_integration(ops_test: OpsTest):
         with attempt:
             r = requests.get(
                 f"http://{prometheus_unit_ip}:9090/api/v1/query?"
-                f'query=up{{juju_application="{APP_NAME}"}}'
+                f'query=up{{juju_application="{constants.ARGO_CONTROLLER}"}}'
             )
             response = json.loads(r.content.decode("utf-8"))
             response_status = response["status"]
@@ -174,7 +184,7 @@ async def test_prometheus_grafana_integration(ops_test: OpsTest):
             assert response_status == "success"
 
             response_metric = response["data"]["result"][0]["metric"]
-            assert response_metric["juju_application"] == APP_NAME
+            assert response_metric["juju_application"] == constants.ARGO_CONTROLLER
             assert response_metric["juju_model"] == ops_test.model_name
 
     # Verify that Prometheus receives the same set of targets as specified.
