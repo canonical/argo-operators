@@ -1,6 +1,6 @@
 # Copyright 2024 Canonical Ltd.
 # See LICENSE file for licensing details.
-
+"""Constants module including constants used in tests."""
 from pathlib import Path
 
 import yaml
