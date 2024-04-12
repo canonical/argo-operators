@@ -31,9 +31,7 @@ async def test_build_and_deploy_with_relations(ops_test: OpsTest):
     )
 
     # Deploy required relations
-    await ops_test.model.deploy(
-        entity_url=constants.MINIO, config=constants.MINIO_CONFIG
-    )
+    await ops_test.model.deploy(entity_url=constants.MINIO, config=constants.MINIO_CONFIG)
     await ops_test.model.add_relation(
         f"{constants.ARGO_CONTROLLER}:object-storage", f"{constants.MINIO}:object-storage"
     )
