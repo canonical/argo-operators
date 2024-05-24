@@ -2,8 +2,8 @@ apiVersion: v1
 data:
   artifactRepository: |
     s3:
-      bucket: {{ s3_bucket }}
       endpoint: {{ s3_minio_endpoint }}
+      bucket: {{ s3_bucket }}
       insecure: {{ kubelet_insecure }}
       accessKeySecret:
         name: {{ mlpipeline_minio_artifact_secret }}
@@ -11,34 +11,9 @@ data:
       secretKeySecret:
         name: {{ mlpipeline_minio_artifact_secret }}
         key: secretkey
-  containerRuntimeExecutors: |
-    - name: {{ runtime_executor }}
-      selector:
-        matchLabels:
-          workflows.argoproj.io/container-runtime-executor: {{ runtime_executor }}
+  containerRuntimeExecutor: {{ runtime_executor }}
   executor: |
-    resources:
-      requests:
-        cpu: 10m
-        memory: 64Mi
-  images: |
-    argoproj/argosay:v1:
-      command: [cowsay]
-    argoproj/argosay:v2:
-      command: [/argosay]
-    docker/whalesay:latest:
-       command: [cowsay]
-    python:alpine3.6:
-       command: [python3]
-  metricsConfig: |
-    enabled: true
-    path: /metrics
-    port: 9090
-  namespaceParallelism: "10"
-  retentionPolicy: |
-    completed: 10
-    failed: 3
-    errored: 3
+    imagePullPolicy: IfNotPresent
 kind: ConfigMap
 metadata:
   name: {{ argo_controller_configmap }}
