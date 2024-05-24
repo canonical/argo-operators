@@ -10,13 +10,6 @@ options:
     type: string
     default: "artifacts/{{workflow.name}}/{{workflow.creationTimestamp.Y}}/{{workflow.creationTimestamp.m}}/{{workflow.creationTimestamp.d}}/{{pod.name}}"
     description: S3 key prefix
-  executor:
-    type: string
-    default: emissary
-    description: |
-      Runtime executor for workflow containers. Defaults to `emissary` as it is the default in both Argo Workflows and
-      the upstream Kubeflow project. Cannot be `docker` on containerd, for a full list of executors, see:
-      https://argoproj.github.io/argo-workflows/workflow-executors/#workflow-executors
   executor-image:
     type: string
     default: gcr.io/ml-pipeline/argoexec:v3.4.16-license-compliance

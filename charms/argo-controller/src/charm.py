@@ -164,7 +164,6 @@ class ArgoControllerOperator(CharmBase):
                 f"{self.object_storage_relation.component.get_data()['port']}"
             ),
             "kubelet_insecure": self.model.config["kubelet-insecure"],
-            "runtime_executor": self.model.config["executor"],
         }
 
 
