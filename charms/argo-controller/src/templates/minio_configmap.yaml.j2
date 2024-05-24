@@ -1,9 +1,11 @@
 apiVersion: v1
 data:
   artifactRepository: |
+    archiveLogs: true
     s3:
       endpoint: {{ s3_minio_endpoint }}
       bucket: {{ s3_bucket }}
+      # insecure will disable TLS. Primarily used for minio installs not configured with TLS
       insecure: {{ kubelet_insecure }}
       accessKeySecret:
         name: {{ mlpipeline_minio_artifact_secret }}
@@ -11,10 +13,13 @@ data:
       secretKeySecret:
         name: {{ mlpipeline_minio_artifact_secret }}
         key: secretkey
-  containerRuntimeExecutor: {{ runtime_executor }}
   executor: |
     imagePullPolicy: IfNotPresent
 kind: ConfigMap
 metadata:
+  annotations:
+    internal.kpt.dev/upstream-identifier: '|ConfigMap|default|workflow-controller-configmap'
+  labels:
+    application-crd-id: kubeflow-pipelines
   name: {{ argo_controller_configmap }}
   namespace: {{ namespace }}
