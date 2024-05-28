@@ -21,13 +21,7 @@ from charms.observability_libs.v1.kubernetes_service_patch import KubernetesServ
 from charms.prometheus_k8s.v0.prometheus_scrape import MetricsEndpointProvider
 from lightkube.models.core_v1 import ServicePort
 from lightkube.resources.apiextensions_v1 import CustomResourceDefinition
-from lightkube.resources.core_v1 import ConfigMap, Secret, ServiceAccount
-from lightkube.resources.rbac_authorization_v1 import (
-    ClusterRole,
-    ClusterRoleBinding,
-    Role,
-    RoleBinding,
-)
+from lightkube.resources.core_v1 import ConfigMap, Secret
 from ops.charm import CharmBase
 from ops.main import main
 
@@ -40,7 +34,6 @@ from components.pebble_component import (
 logger = logging.getLogger(__name__)
 
 K8S_RESOURCE_FILES = [
-    "src/templates/auth_manifests.yaml.j2",
     "src/templates/crds.yaml",
     "src/templates/minio_configmap.yaml.j2",
     "src/templates/mlpipeline_minio_artifact_secret.yaml.j2",
@@ -102,22 +95,17 @@ class ArgoControllerOperator(CharmBase):
         self.kubernetes_resources = self.charm_reconciler.add(
             component=KubernetesComponent(
                 charm=self,
-                name="kubernetes:auth-crds-cm-and-secrets",
+                name="kubernetes:crds-cm-and-secrets",
                 resource_templates=K8S_RESOURCE_FILES,
                 krh_resource_types={
-                    ClusterRole,
-                    ClusterRoleBinding,
                     ConfigMap,
                     CustomResourceDefinition,
-                    Role,
-                    RoleBinding,
                     Secret,
-                    ServiceAccount,
                 },
                 krh_labels=create_charm_default_labels(
                     self.app.name,
                     self.model.name,
-                    scope="auth-crds-cm-and-secrets",
+                    scope="crds-cm-and-secrets",
                 ),
                 context_callable=self._context_callable,
                 lightkube_client=lightkube.Client(),
