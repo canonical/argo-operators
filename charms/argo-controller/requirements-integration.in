@@ -5,3 +5,4 @@ juju<4.0
 pytest-operator
 requests
 tenacity
+git+https://github.com/rgildein/charmed-kubeflow-chisme.git@chore/KF-5731/cos-testing
