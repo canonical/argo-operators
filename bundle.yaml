@@ -1,4 +1,4 @@
-# Copyright 2023 Canonical Ltd.
+# Copyright 2024 Canonical Ltd.
 # See LICENSE file for licensing details.
 
 bundle: kubernetes
@@ -8,11 +8,6 @@ applications:
     charm: ch:argo-controller
     channel: latest/edge
     source: ./operators/argo-controller
-    scale: 1
-  argo-server:
-    charm: ch:argo-server
-    channel: latest/edge
-    source: ./operators/argo-server
     scale: 1
   minio:
     charm: ch:minio
