@@ -1,14 +1,19 @@
 # Copyright 2023 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-import json
 import logging
 from pathlib import Path
 
 import pytest
-import requests
-import tenacity
 import yaml
+from charmed_kubeflow_chisme.testing import (
+    GRAFANA_AGENT_APP,
+    assert_alert_rules,
+    assert_logging,
+    assert_metrics_endpoints,
+    deploy_and_assert_grafana_agent,
+    get_alert_rules,
+)
 from pytest_operator.plugin import OpsTest
 
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
@@ -51,9 +56,7 @@ async def test_build_and_deploy_with_relations(ops_test: OpsTest):
 
     # Deploy required relations
     await ops_test.model.deploy(entity_url=MINIO, config=MINIO_CONFIG)
-    await ops_test.model.add_relation(
-        f"{ARGO_CONTROLLER}:object-storage", f"{MINIO}:object-storage"
-    )
+    await ops_test.model.integrate(f"{ARGO_CONTROLLER}:object-storage", f"{MINIO}:object-storage")
 
     await ops_test.model.wait_for_idle(timeout=60 * 10)
     # TODO: This does not handle blocked status right.  Sometimes it passes when argo-controller
@@ -61,6 +64,9 @@ async def test_build_and_deploy_with_relations(ops_test: OpsTest):
 
     # The unit should be active before creating/testing resources
     await ops_test.model.wait_for_idle(apps=[ARGO_CONTROLLER], status="active", timeout=1000)
+
+    # Deploying grafana-agent-k8s and add all relations
+    await deploy_and_assert_grafana_agent(ops_test.model, ARGO_CONTROLLER)
 
 
 async def create_artifact_bucket(ops_test: OpsTest):
@@ -143,130 +149,21 @@ async def test_workflow_using_artifacts(ops_test: OpsTest):
     await submit_workflow_using_artifact(ops_test)
 
 
-async def test_prometheus_grafana_integration(ops_test: OpsTest):
-    """Deploy prometheus, grafana and required relations, then test the metrics."""
-    # Deploy and relate prometheus
-    await ops_test.model.deploy(
-        PROMETHEUS_K8S,
-        channel=PROMETHEUS_K8S_CHANNEL,
-        trust=PROMETHEUS_K8S_TRUST,
-    )
-    await ops_test.model.deploy(
-        GRAFANA_K8S,
-        channel=GRAFANA_K8S_CHANNEL,
-        trust=GRAFANA_K8S_TRUST,
-    )
-    await ops_test.model.deploy(
-        PROMETHEUS_SCRAPE_K8S,
-        channel=PROMETHEUS_SCRAPE_K8S_CHANNEL,
-        config=PROMETHEUS_SCRAPE_CONFIG,
-    )
-
-    await ops_test.model.add_relation(ARGO_CONTROLLER, PROMETHEUS_SCRAPE_K8S)
-    await ops_test.model.add_relation(
-        f"{PROMETHEUS_K8S}:grafana-dashboard",
-        f"{GRAFANA_K8S}:grafana-dashboard",
-    )
-    await ops_test.model.add_relation(
-        f"{ARGO_CONTROLLER}:grafana-dashboard",
-        f"{GRAFANA_K8S}:grafana-dashboard",
-    )
-    await ops_test.model.add_relation(
-        f"{PROMETHEUS_K8S}:metrics-endpoint",
-        f"{PROMETHEUS_SCRAPE_K8S}:metrics-endpoint",
-    )
-
-    await ops_test.model.wait_for_idle(status="active", timeout=60 * 20)
-
-    status = await ops_test.model.get_status()
-    prometheus_unit_ip = status["applications"][PROMETHEUS_K8S]["units"][f"{PROMETHEUS_K8S}/0"][
-        "address"
-    ]
-    log.info(f"Prometheus available at http://{prometheus_unit_ip}:9090")
-
-    for attempt in retry_for_5_attempts:
-        log.info(
-            f"Testing prometheus deployment (attempt " f"{attempt.retry_state.attempt_number})"
-        )
-        with attempt:
-            r = requests.get(
-                f"http://{prometheus_unit_ip}:9090/api/v1/query?"
-                f'query=up{{juju_application="{ARGO_CONTROLLER}"}}'
-            )
-            response = json.loads(r.content.decode("utf-8"))
-            response_status = response["status"]
-            log.info(f"Response status is {response_status}")
-            assert response_status == "success"
-
-            response_metric = response["data"]["result"][0]["metric"]
-            assert response_metric["juju_application"] == ARGO_CONTROLLER
-            assert response_metric["juju_model"] == ops_test.model_name
-
-    # Verify that Prometheus receives the same set of targets as specified.
-    for attempt in retry_for_5_attempts:
-        log.info(f"Testing prometheus targets (attempt {attempt.retry_state.attempt_number})")
-        with attempt:
-            # obtain scrape targets from Prometheus
-            targets_result = requests.get(f"http://{prometheus_unit_ip}:9090/api/v1/targets")
-            response = json.loads(targets_result.content.decode("utf-8"))
-            response_status = response["status"]
-            log.info(f"Response status is {response_status}")
-            assert response_status == "success"
-
-            # verify that Argo Controller is in the target list
-            discovered_labels = response["data"]["activeTargets"][0]["discoveredLabels"]
-            assert discovered_labels["juju_application"] == "argo-controller"
-
-    # Verify that Prometheus receives the same set of alert rules as specified.
-    for attempt in retry_for_5_attempts:
-        log.info(f"Testing prometheus rules (attempt {attempt.retry_state.attempt_number})")
-        with attempt:
-            # obtain alert rules from Prometheus
-            rules_result = requests.get(f"http://{prometheus_unit_ip}:9090/api/v1/rules")
-            response = json.loads(rules_result.content.decode("utf-8"))
-            response_status = response["status"]
-            log.info(f"Response status is {response_status}")
-            assert response_status == "success"
-
-            # verify alerts are available in Prometheus
-            rules = []
-            for group in response["data"]["groups"]:
-                rules.append(group["rules"][0])
-
-            # load alert rules from the rule files
-            test_alerts = []
-            with open("src/prometheus_alert_rules/loglines_error.rule") as f:
-                file_alert = yaml.safe_load(f.read())
-                test_alerts.append(file_alert["alert"])
-            with open("src/prometheus_alert_rules/loglines_warning.rule") as f:
-                file_alert = yaml.safe_load(f.read())
-                test_alerts.append(file_alert["alert"])
-            with open("src/prometheus_alert_rules/unit_unavailable.rule") as f:
-                file_alert = yaml.safe_load(f.read())
-                test_alerts.append(file_alert["alert"])
-            with open("src/prometheus_alert_rules/workflows_erroring.rule") as f:
-                file_alert = yaml.safe_load(f.read())
-                test_alerts.append(file_alert["alert"])
-            with open("src/prometheus_alert_rules/workflows_failing.rule") as f:
-                file_alert = yaml.safe_load(f.read())
-                test_alerts.append(file_alert["alert"])
-            with open("src/prometheus_alert_rules/workflows_pending.rule") as f:
-                file_alert = yaml.safe_load(f.read())
-                test_alerts.append(file_alert["alert"])
-
-            # verify number of alerts is the same in Prometheus and in the rules file
-            assert len(rules) == len(test_alerts)
-
-            # verify that all Argo Controller alert rules are in the list and that alerts are
-            # obtained from Prometheus
-            # match alerts in the rules files
-            for rule in rules:
-                assert rule["name"] in test_alerts
+async def test_alert_rules(ops_test):
+    """Test alert_rules are defined in relation data bag."""
+    app = ops_test.model.applications[ARGO_CONTROLLER]
+    alert_rules = get_alert_rules()
+    log.info("found alert_rules: %s", alert_rules)
+    await assert_alert_rules(app, alert_rules)
 
 
-# Helper to retry calling a function over 30 seconds or 5 attempts
-retry_for_5_attempts = tenacity.Retrying(
-    stop=(tenacity.stop_after_attempt(5) | tenacity.stop_after_delay(30)),
-    wait=tenacity.wait_exponential(multiplier=1, min=1, max=10),
-    reraise=True,
-)
+async def test_metrics_endpoints(ops_test):
+    """Test metrics_endpoint defione in relation data bag."""
+    app = ops_test.model.applications[ARGO_CONTROLLER]
+    await assert_metrics_endpoints(app, {"*:9090/metrics"})
+
+
+async def test_logging(ops_test):
+    """Test logging is defined in relation data bag."""
+    app = ops_test.model.applications[GRAFANA_AGENT_APP]
+    await assert_logging(app)
