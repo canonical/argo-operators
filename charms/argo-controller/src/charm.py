@@ -40,7 +40,6 @@ K8S_RESOURCE_FILES = [
     "src/templates/mlpipeline_minio_artifact_secret.yaml.j2",
 ]
 METRICS_PATH = "/metrics"
-LOGGING_RELATION_NAME = "logging"
 
 
 class ArgoControllerOperator(CharmBase):
@@ -133,7 +132,7 @@ class ArgoControllerOperator(CharmBase):
         )
 
         self.charm_reconciler.install_default_event_handlers()
-        self._logging = LogForwarder(charm=self, relation_name=LOGGING_RELATION_NAME)
+        self._logging = LogForwarder(charm=self)
 
     @property
     def _context_callable(self):

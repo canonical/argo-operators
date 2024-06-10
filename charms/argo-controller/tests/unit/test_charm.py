@@ -53,7 +53,7 @@ def test_log_forwarding(
 ):
     with patch("charm.LogForwarder") as mock_logging:
         harness.begin()
-        mock_logging.assert_called_once_with(charm=harness.charm, relation_name="logging")
+        mock_logging.assert_called_once_with(charm=harness.charm)
 
 
 def test_not_leader(harness, mocked_lightkube_client, mocked_kubernetes_service_patch):
