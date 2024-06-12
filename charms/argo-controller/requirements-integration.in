@@ -5,3 +5,5 @@ juju<4.0
 pytest-operator
 requests
 tenacity
+# This is required due to the abstraction of cos integration
+charmed-kubeflow-chisme>=0.4.0
