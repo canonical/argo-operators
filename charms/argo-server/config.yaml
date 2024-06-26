@@ -1,8 +1,0 @@
-# Copyright 2023 Canonical Ltd.
-# See LICENSE file for licensing details.
-
-options:
-  port:
-    type: int
-    default: 2746
-    description: Argo Server port
