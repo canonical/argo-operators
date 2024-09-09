@@ -34,6 +34,12 @@ jobs:
     with:
       working-directory: charms/argo-controller/terraform
 
+  terraform-deploy:
+    name: Deploy Terraform
+    uses: canonical/charmed-kubeflow-workflows/.github/workflows/deploy-terraform.yaml@orfeas-k-add-terraform-reusable-workflow
+    with:
+      working-directory: charms/argo-controller/terraform
+
   unit:
     name: Unit Tests
     runs-on: ubuntu-20.04
