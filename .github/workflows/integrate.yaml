@@ -28,10 +28,17 @@ jobs:
       uses: terraform-linters/setup-tflint@v4
     - run: tox -vve argo-controller-lint
 
-  terraform-fmt:
-    name: Format Terraform
+  terraform-check:
+    name: Check Terraform
     uses: canonical/sdcore-github-workflows/.github/workflows/terraform.yaml@v1.0.0
     with:
+      working-directory: charms/argo-controller/terraform
+
+  terraform-deploy:
+    name: Deploy Terraform
+    uses: canonical/charmed-kubeflow-workflows/.github/workflows/terraform-deploy.yaml@orfeas-k-add-terraform-reusable-workflow
+    with:
+      model: kubeflow
       working-directory: charms/argo-controller/terraform
 
   unit:
