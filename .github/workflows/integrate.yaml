@@ -28,6 +28,12 @@ jobs:
       uses: terraform-linters/setup-tflint@v4
     - run: tox -vve argo-controller-lint
 
+  terraform-fmt:
+    name: Format terraform
+    uses: canonical/sdcore-github-workflows/.github/workflows/terraform.yaml@v1.0.0
+    with:
+      working-directory: charms/argo-controller/terraform
+
   unit:
     name: Unit Tests
     runs-on: ubuntu-20.04
