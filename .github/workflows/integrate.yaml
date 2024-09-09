@@ -6,7 +6,7 @@ on:
     secrets:
       CHARMCRAFT_CREDENTIALS:
         required: true
-
+# trigger ci
 jobs:
   lib-check:
     name: Check libraries
