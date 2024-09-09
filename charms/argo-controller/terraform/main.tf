@@ -8,6 +8,7 @@ resource "juju_application" "argo_controller" {
     channel  = var.channel
     revision = var.revision
   }
+
   units  = 1
   config = var.config
 }
