@@ -10,7 +10,7 @@ on:
 jobs:
   lib-check:
     name: Check libraries
-    uses: canonical/charmed-kubeflow-workflows/.github/workflows/_quality-checks.yaml@main
+    uses: canonical/charmed-kubeflow-workflows/.github/workflows/_quality-checks.yaml@orfeas-k-update-linting
     secrets: inherit
     with:
       charm-path: ./charms/argo-controller
@@ -24,6 +24,8 @@ jobs:
     - run: |
         sudo apt update
         sudo apt install tox
+    - name: Setup TFLint
+      uses: terraform-linters/setup-tflint@v4
     - run: tox -vve argo-controller-lint
 
   unit:
