@@ -3,15 +3,15 @@ output "app_name" {
 }
 
 output "provides" {
-  value = [
-    "metrics-endpoint",
-    "grafana-dashboard"
-  ]
+  value = {
+    metrics_endpoint  = "metrics-endpoint",
+    grafana_dashboard = "grafana-dashboard"
+  }
 }
 
 output "requires" {
-  value = [
-    "object-storage",
-    "logging"
-  ]
+  value = {
+    object_storage = "object-storage",
+    logging        = "logging"
+  }
 }
