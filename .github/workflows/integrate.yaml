@@ -39,6 +39,7 @@ jobs:
     uses: canonical/charmed-kubeflow-workflows/.github/workflows/terraform-deploy.yaml@orfeas-k-add-terraform-reusable-workflow
     with:
       model: kubeflow
+      channel: latest/edge
       working-directory: charms/argo-controller/terraform
 
   unit:
