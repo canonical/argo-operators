@@ -28,7 +28,7 @@ jobs:
 
   terraform-checks:
     name: Terraform
-    uses: canonical/charmed-kubeflow-workflows/.github/workflows/terraform-checks.yaml@orfeas-k-add-terraform-checks-workflow
+    uses: canonical/charmed-kubeflow-workflows/.github/workflows/terraform-checks.yaml@orfeas-k-test-terraform-workflows
     with:
       charm-path: ./charms/argo-controller
       model: kubeflow
