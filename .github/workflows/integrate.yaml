@@ -26,14 +26,6 @@ jobs:
         sudo apt install tox
     - run: tox -vve argo-controller-lint
 
-  terraform-checks:
-    name: Terraform
-    uses: canonical/charmed-kubeflow-workflows/.github/workflows/terraform-checks.yaml@main
-    with:
-      charm-path: ./charms/argo-controller
-      model: kubeflow
-      channel: latest/edge
-
   unit:
     name: Unit Tests
     runs-on: ubuntu-20.04
@@ -44,6 +36,14 @@ jobs:
         sudo apt update
         sudo apt install tox
     - run: tox -vve argo-controller-unit
+
+  terraform-checks:
+    name: Terraform
+    uses: canonical/charmed-kubeflow-workflows/.github/workflows/terraform-checks.yaml@main
+    with:
+      charm-path: ./charms/argo-controller
+      model: kubeflow
+      channel: latest/edge
 
   integration:
     name: Integration Test
