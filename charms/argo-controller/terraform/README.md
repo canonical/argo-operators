@@ -30,8 +30,10 @@ Upon applied, the module exports the following outputs:
 
 ## Usage
 
-### Integrating in a higher-level module
-In order to use this module in a higher-level module, ensure that Terraform is aware of its `juju_model` dependency by passing to the `model_name` input  a reference to the `juju_model` resource's name. For example:
+This module is intended to be used as part of a higher-level module. When defining one, users should ensure that Terraform is aware of the `juju_model` dependency of the charm module. There are two options to do so when creating a high-level module:
+
+### Define a `juju_model` resource
+Define a `juju_model` resource and pass to the `model_name` input a reference to the `juju_model` resource's name. For example:
 
 ```
 resource "juju_model" "testing" {
@@ -44,9 +46,15 @@ module "argo-controller" {
 }
 ```
 
-### Applying directly the module from the CLI
-Although not recommended, in order to apply the module directly from the CLI, ensure that a `juju` model has already been created and then manually use its name as the value of the `model_name` input. For example:
+### Define a `data` source
+Define a `data` source and pass to the `model_name` input a reference to the `data.juju_model` resource's name. This will enable Terraform to look for a `juju_model` resource with a name attribute equal to the one provided, and apply only if this is present. Otherwise, it will fail before applying anything.
 ```
-# check that there is a model called `kubeflow`
-terraform apply -var "model_name=kubeflow"
+data "juju_model" "testing" {
+  name = var.model_name
+}
+
+module "argo-controller" {
+  source = "<path-to-this-directory>"
+  model_name = data.juju_model.testing.name
+}
 ```
