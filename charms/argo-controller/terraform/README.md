@@ -5,7 +5,9 @@ This is a Terraform module facilitating the deployment of argo-controller charm,
 ## Requirements
 This module requires a `juju` model to be available. Refer to the [usage section](#usage) below for more details.
 
-## Inputs
+## API
+
+### Inputs
 The module offers the following configurable inputs:
 
 | Name | Type | Description | Required |
@@ -17,7 +19,7 @@ The module offers the following configurable inputs:
 | `resources`| map(number) | Map of charm resources revisions | False |
 | `revision`| number | Revision number of the charm name | False |
 
-## Outputs
+### Outputs
 Upon applied, the module exports the following outputs:
 
 | Name | Description |
