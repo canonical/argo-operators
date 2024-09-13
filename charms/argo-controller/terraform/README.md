@@ -29,16 +29,16 @@ Upon applied, the module exports the following outputs:
 ## Usage
 
 ### Integrating in a higher-level module
-In order to use this module in a higher-level module, ensure that Terraform is aware of its `model` dependency by passing to the `model_name` input the value of the output `juju_model.<model_label>.name`. For example:
+In order to use this module in a higher-level module, ensure that Terraform is aware of its `juju_model` dependency by passing to the `model_name` input  a reference to the `juju_model` resource's name. For example:
 
 ```
-resource "juju_model" "kubeflow" {
+resource "juju_model" "testing" {
   name = kubeflow
 }
 
 module "argo-controller" {
   source = "<path-to-this-directory>"
-  model_name = juju_model.kubeflow.name
+  model_name = juju_model.testing.name
 }
 ```
 
