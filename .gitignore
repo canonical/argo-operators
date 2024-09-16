@@ -5,3 +5,6 @@ __pycache__
 operators/argo-controller/build
 .tox
 .idea
+venv/
+.terraform*
+*.tfstate*
