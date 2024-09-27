@@ -42,6 +42,7 @@ jobs:
     uses: canonical/charmed-kubeflow-workflows/.github/workflows/terraform-checks.yaml@main
     with:
       charm-path: ./charms/argo-controller
+      channel: 3.4/stable
 
   integration:
     name: Integration Test
