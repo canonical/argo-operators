@@ -46,7 +46,7 @@ async def test_build_and_deploy_with_relations(ops_test: OpsTest):
     )
 
     # Deploy required relations
-    await ops_test.model.deploy(entity_url=MINIO, config=MINIO_CONFIG)
+    await ops_test.model.deploy(entity_url=MINIO, config=MINIO_CONFIG, channel=MINIO_CHANNEL)
     await ops_test.model.integrate(f"{ARGO_CONTROLLER}:object-storage", f"{MINIO}:object-storage")
 
     await ops_test.model.wait_for_idle(timeout=60 * 10)
