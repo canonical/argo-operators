@@ -28,7 +28,6 @@ from ops.main import main
 
 from components.pebble_component import (
     ARGO_CONTROLLER_CONFIGMAP,
-    ARGO_KEYFORMAT,
     METRICS_PORT,
     ArgoControllerPebbleService,
 )
@@ -155,7 +154,7 @@ class ArgoControllerOperator(CharmBase):
                 f"{self.object_storage_relation.component.get_data()['port']}"
             ),
             "kubelet_insecure": self.model.config["kubelet-insecure"],
-            "key_format": ARGO_KEYFORMAT,
+            "key_format": self.model.config["key-format"],
         }
 
 

@@ -8,7 +8,6 @@ from ops.pebble import Layer
 logger = logging.getLogger(__name__)
 
 ARGO_CONTROLLER_CONFIGMAP = "argo-workflow-controller-configmap"
-ARGO_KEYFORMAT = "artifacts/{{workflow.name}}/{{workflow.creationTimestamp.Y}}/{{workflow.creationTimestamp.m}}/{{workflow.creationTimestamp.d}}/{{pod.name}}"  # noqa E501
 EXECUTOR_IMAGE_CONFIG_NAME = "executor-image"
 LIVENESS_PROBE_PORT = "6060"
 METRICS_PORT = "9090"
