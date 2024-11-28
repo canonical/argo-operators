@@ -9,7 +9,7 @@ options:
   key-format:
     type: string
     default: "artifacts/{{workflow.name}}/{{workflow.creationTimestamp.Y}}/{{workflow.creationTimestamp.m}}/{{workflow.creationTimestamp.d}}/{{pod.name}}"
-    description: Format to define how artifacts will be organized in S3 bucket.
+    description: S3 key prefix
   executor-image:
     type: string
     default: charmedkubeflow/argoexec:3.4.16-ffcffa9
