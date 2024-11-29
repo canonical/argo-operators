@@ -5,6 +5,8 @@ data:
     s3:
       endpoint: {{ s3_minio_endpoint }}
       bucket: {{ s3_bucket }}
+      # keyFormat defines how artifacts will be organized in a bucket.
+      keyFormat: {{ key_format }}
       # insecure will disable TLS. Primarily used for minio installs not configured with TLS
       insecure: {{ kubelet_insecure }}
       accessKeySecret:
