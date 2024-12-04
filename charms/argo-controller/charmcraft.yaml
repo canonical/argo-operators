@@ -12,4 +12,8 @@ bases:
 parts:
   charm:
     charm-python-packages: [setuptools, pip]  # Fixes install of some packages
-    build-packages: [cargo, rustc, pkg-config, libffi-dev, libssl-dev]
+    build-snaps: [rustup]
+    build-packages: [pkg-config, libffi-dev, libssl-dev]
+    override-build: |
+      rustup default stable
+      craftctl default
