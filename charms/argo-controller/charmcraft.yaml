@@ -13,7 +13,6 @@ parts:
   charm:
     charm-python-packages: [setuptools, pip]  # Fixes install of some packages
     build-snaps: [rustup]
-    build-packages: [pkg-config, libffi-dev, libssl-dev]
     override-build: |
       rustup default stable
       craftctl default
