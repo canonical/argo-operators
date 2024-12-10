@@ -21,9 +21,7 @@ jobs:
     steps:
     - name: Check out repo
       uses: actions/checkout@v3
-    - run: |
-        sudo apt update
-        sudo apt install tox
+    - run: pip install tox
     - run: tox -vve argo-controller-lint
 
   unit:
@@ -32,9 +30,7 @@ jobs:
     steps:
     - name: Check out repo
       uses: actions/checkout@v3
-    - run: |
-        sudo apt update
-        sudo apt install tox
+    - run: pip install tox
     - run: tox -vve argo-controller-unit
 
   terraform-checks:
