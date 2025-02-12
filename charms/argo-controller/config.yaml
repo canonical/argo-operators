@@ -12,7 +12,7 @@ options:
     description: S3 key prefix
   executor-image:
     type: string
-    default: charmedkubeflow/argoexec:3.4.16-ffcffa9
+    default: gcr.io/ml-pipeline/argoexec:v3.4.17-license-compliance
     description: |
       Image to use for runtime executor. Should be updated alongside updating the rest of the charm's images.
   kubelet-insecure:
