@@ -21,9 +21,7 @@ jobs:
     steps:
     - name: Check out repo
       uses: actions/checkout@v3
-    - run: |
-        sudo apt update
-        sudo apt install tox
+    - run: pip install tox
     - run: tox -vve argo-controller-lint
 
   unit:
@@ -32,9 +30,7 @@ jobs:
     steps:
     - name: Check out repo
       uses: actions/checkout@v3
-    - run: |
-        sudo apt update
-        sudo apt install tox
+    - run: pip install tox
     - run: tox -vve argo-controller-unit
 
   terraform-checks:
@@ -56,10 +52,10 @@ jobs:
       uses: charmed-kubernetes/actions-operator@main
       with:
         provider: microk8s
-        channel: 1.29-strict/stable
+        channel: 1.31-strict/stable
         microk8s-addons: "dns storage rbac metallb:10.64.140.43-10.64.140.49"
-        juju-channel: 3.4/stable
-        charmcraft-channel: latest/candidate
+        juju-channel: 3.6/stable
+        charmcraft-channel: 3.x/stable
 
     - name: Build and test
       working-directory: ./charms/${{ matrix.charm }}
