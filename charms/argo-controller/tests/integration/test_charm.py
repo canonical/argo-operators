@@ -14,18 +14,14 @@ from charmed_kubeflow_chisme.testing import (
     deploy_and_assert_grafana_agent,
     get_alert_rules,
 )
+from dependencies import MINIO, MINIO_CHANNEL, MINIO_CONFIG
 from pytest_operator.plugin import OpsTest
 
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 CHARM_ROOT = "."
 ARGO_CONTROLLER = "argo-controller"
 ARGO_CONTROLLER_TRUST = True
-MINIO = "minio"
-MINIO_CHANNEL = "latest/edge"
-MINIO_CONFIG = {
-    "access-key": "minio",
-    "secret-key": "minio-secret-key",
-}
+
 
 log = logging.getLogger(__name__)
 
