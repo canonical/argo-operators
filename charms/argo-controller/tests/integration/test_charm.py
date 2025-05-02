@@ -21,7 +21,7 @@ CHARM_ROOT = "."
 ARGO_CONTROLLER = "argo-controller"
 ARGO_CONTROLLER_TRUST = True
 MINIO = "minio"
-MINIO_CHANNEL = "latest/edge"
+MINIO_CHANNEL = "ckf-1.10/stable"
 MINIO_CONFIG = {
     "access-key": "minio",
     "secret-key": "minio-secret-key",
