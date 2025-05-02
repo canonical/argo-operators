@@ -76,7 +76,6 @@ async def create_artifact_bucket(ops_test: OpsTest):
         f"&& mc mb {alias}/{bucket} -p"
     )
     kubectl_cmd = (
-        "microk8s",
         "kubectl",
         "run",
         "--rm",
@@ -101,7 +100,6 @@ async def create_artifact_bucket(ops_test: OpsTest):
 
 async def submit_workflow_using_artifact(ops_test: OpsTest):
     kubectl_cmd = (
-        "microk8s",
         "kubectl",
         f"--namespace={ops_test.model_name}",
         "create",
@@ -119,7 +117,6 @@ async def submit_workflow_using_artifact(ops_test: OpsTest):
     log.info(f"Waiting on {workflow_name} to finish")
 
     kubectl_wait_cmd = (
-        "microk8s",
         "kubectl",
         f"--namespace={ops_test.model_name}",
         "wait",
