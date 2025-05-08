@@ -1,5 +1,5 @@
 alert: ArgoWorkflowPodsMissing
-expr: increase(argo_pod_missing[5m]) > 0
+expr: max_over_time(argo_pod_missing[5m]) > 0
 for: 5m
 labels:
   severity: critical
