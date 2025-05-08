@@ -1,0 +1,8 @@
+alert: ArgoTooManyRequests
+expr: sum by(kind, verb) (rate(argo_workflows_k8s_request_total{status_code="429"}[5m])) > 0
+for: 1m
+labels:
+  severity: warning
+annotations:
+  summary: "Argo is receiving too many requests (429)"
+  description: "Argo controller is receiving 429 (Too Many Requests) responses."
