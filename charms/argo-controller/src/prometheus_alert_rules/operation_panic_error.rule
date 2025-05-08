@@ -1,0 +1,9 @@
+alert: ArgoWorkflowOperationPanic
+expr: increase(argo_workflows_error_count{cause="OperationPanic"}[5m]) > 0
+for: 2m
+labels:
+  severity: warning
+annotations:
+  summary: "Argo Workflow Operation Panic Detected"
+  description: |
+    One or more workflow operations have panicked in the last 5 minutes.
