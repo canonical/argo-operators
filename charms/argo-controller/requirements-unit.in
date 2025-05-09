@@ -4,7 +4,7 @@ coverage
 pytest
 pytest-mock
 
-# Added because of TODO link issue
+# Added because of https://github.com/canonical/bundle-kubeflow/issues/1258
 # Once the above are resolved, we should remove those packages and
 # instead do: -r requirements.txt
 charmed-kubeflow-chisme>=0.2.0

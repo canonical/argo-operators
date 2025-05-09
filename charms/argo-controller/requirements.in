@@ -7,6 +7,7 @@ lightkube
 ops
 serialized-data-interface
 
-# Commented because of TODO link issue
+# Commented and moved to charmcraft.yaml `charm-binary-python-packages` because
+# of https://github.com/canonical/bundle-kubeflow/issues/1258
 #charmed-kubeflow-chisme>=0.2.0
 #cosl

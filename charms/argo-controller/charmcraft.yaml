@@ -12,7 +12,7 @@ bases:
 parts:
   charm:
     charm-python-packages: [setuptools, pip]  # Fixes install of some packages
-    # Don't build from source because of TODO link issue
+    # Don't build from source because of https://github.com/canonical/bundle-kubeflow/issues/1258
     # Once it's resolved we should move those in requirements.in
     charm-binary-python-packages:
       - charmed-kubeflow-chisme==0.4.3
