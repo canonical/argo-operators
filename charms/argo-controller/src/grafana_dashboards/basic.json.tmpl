@@ -652,13 +652,13 @@
         {
           "datasource": "${prometheusds}",
           "editorMode": "code",
-          "expr": "argo_workflows_error_count{}",
+          "expr": "increase(argo_workflows_error_count[5m])",
           "legendFormat": "{{cause}}",
           "range": true,
           "refId": "errors rate"
         }
       ],
-      "title": "Workflows Errors rate",
+      "title": "Workflow Errors Increase (5m)",
       "transparent": true,
       "type": "timeseries"
     },
