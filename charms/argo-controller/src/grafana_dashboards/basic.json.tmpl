@@ -3,7 +3,7 @@
     "list": [
       {
         "builtIn": 1,
-        "datasource": "-- Grafana --",
+        "datasource": "${prometheusds}",
         "enable": true,
         "hide": true,
         "iconColor": "rgba(0, 211, 255, 1)",
@@ -21,14 +21,15 @@
   "description": "Metrics from argoWF compatible with multi prometheus origins like Thanos.",
   "editable": true,
   "fiscalYearStartMonth": 0,
+  "gnetId": 13927,
   "graphTooltip": 1,
-  "id": null,
-  "iteration": 1643370954936,
+  "id": 29,
   "links": [],
   "liveNow": false,
   "panels": [
     {
       "collapsed": false,
+      "datasource": "${prometheusds}",
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -37,10 +38,17 @@
       },
       "id": 28,
       "panels": [],
+      "targets": [
+        {
+          "datasource": "${prometheusds}",
+          "refId": "A"
+        }
+      ],
       "title": "Currently",
       "type": "row"
     },
     {
+      "datasource": "${prometheusds}",
       "gridPos": {
         "h": 5,
         "w": 2,
@@ -49,12 +57,18 @@
       },
       "id": 5,
       "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
         "content": "<div style=\"background-color:white; height:100%\">\n<img src=\"https://user-images.githubusercontent.com/25306803/43103633-a5d61dc4-8e83-11e8-9f0e-7ccdbee01eb6.png\" />\n</div>",
         "mode": "html"
       },
-      "pluginVersion": "8.3.2",
+      "pluginVersion": "9.5.3",
       "targets": [
         {
+          "datasource": "${prometheusds}",
           "queryType": "randomWalk",
           "refId": "A"
         }
@@ -88,7 +102,7 @@
       "gridPos": {
         "h": 6,
         "w": 3,
-        "x": 2,
+        "x": 5,
         "y": 1
       },
       "id": 10,
@@ -107,12 +121,12 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "8.3.2",
+      "pluginVersion": "9.5.3",
       "targets": [
         {
           "datasource": "${prometheusds}",
           "exemplar": false,
-          "expr": "argo_workflows_count{origin_prometheus=~\"^$dc$\",kubernetes_namespace=~\"$ns\",status=\"Pending\"} ",
+          "expr": "argo_workflows_count{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\",kubernetes_namespace=~\"$ns\",origin_prometheus=~\"^$dc$\",status=\"Pending\"}",
           "instant": true,
           "interval": "",
           "legendFormat": "",
@@ -121,69 +135,6 @@
         }
       ],
       "title": "WF Pending",
-      "transparent": true,
-      "type": "stat"
-    },
-    {
-      "datasource": "${prometheusds}",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "#EAB839",
-                "value": 1
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 3,
-        "x": 5,
-        "y": 1
-      },
-      "id": 11,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "text": {},
-        "textMode": "auto"
-      },
-      "pluginVersion": "8.3.2",
-      "targets": [
-        {
-          "datasource": "${prometheusds}",
-          "exemplar": false,
-          "expr": "argo_workflows_count{origin_prometheus=~\"^$dc$\",kubernetes_namespace=~\"$ns\",status=\"Running\"}",
-          "instant": true,
-          "interval": "",
-          "legendFormat": "",
-          "queryType": "randomWalk",
-          "refId": "A"
-        }
-      ],
-      "title": "WF Running",
       "transparent": true,
       "type": "stat"
     },
@@ -233,12 +184,12 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "8.3.2",
+      "pluginVersion": "9.5.3",
       "targets": [
         {
           "datasource": "${prometheusds}",
           "exemplar": false,
-          "expr": "argo_workflows_count{origin_prometheus=~\"^$dc$\",kubernetes_namespace=~\"$ns\",status=\"Error\"}",
+          "expr": "argo_workflows_count{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\",kubernetes_namespace=~\"$ns\",origin_prometheus=~\"^$dc$\",status=\"Error\"}",
           "instant": true,
           "interval": "",
           "legendFormat": "",
@@ -296,12 +247,12 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "8.3.2",
+      "pluginVersion": "9.5.3",
       "targets": [
         {
           "datasource": "${prometheusds}",
           "exemplar": false,
-          "expr": "argo_workflows_count{origin_prometheus=~\"^$dc$\",kubernetes_namespace=~\"$ns\",status=\"Failed\"}",
+          "expr": "argo_workflows_count{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\",kubernetes_namespace=~\"$ns\",origin_prometheus=~\"^$dc$\",status=\"Failed\"}",
           "instant": true,
           "interval": "",
           "legendFormat": "",
@@ -360,12 +311,12 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "8.3.2",
+      "pluginVersion": "9.5.3",
       "targets": [
         {
           "datasource": "${prometheusds}",
           "exemplar": false,
-          "expr": "argo_workflows_count{origin_prometheus=~\"^$dc$\",kubernetes_namespace=~\"$ns\",status=\"Skipped\"}",
+          "expr": "argo_workflows_count{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\",kubernetes_namespace=~\"$ns\",origin_prometheus=~\"^$dc$\",status=\"Skipped\"}",
           "instant": true,
           "interval": "",
           "legendFormat": "",
@@ -379,10 +330,41 @@
     },
     {
       "datasource": "${prometheusds}",
+      "description": "",
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "thresholds"
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
           },
           "mappings": [],
           "thresholds": {
@@ -391,6 +373,10 @@
               {
                 "color": "green",
                 "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
               }
             ]
           }
@@ -398,16 +384,74 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 6,
-        "w": 3,
-        "x": 17,
-        "y": 1
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 7
       },
-      "id": 13,
+      "id": 30,
       "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "9.5.3",
+      "targets": [
+        {
+          "datasource": "${prometheusds}",
+          "editorMode": "code",
+          "expr": "sum(rate(argo_workflows_k8s_request_total[5m])) by (status_code)",
+          "legendFormat": "{{status_code}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Total K8s requests rate",
+      "transparent": true,
+      "type": "timeseries"
+    },
+    {
+      "datasource": "${prometheusds}",
+      "description": "Pods expected by argo controller that never appeared or were deleted",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 7
+      },
+      "id": 31,
+      "options": {
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
@@ -416,38 +460,28 @@
           "fields": "",
           "values": false
         },
-        "text": {},
-        "textMode": "auto"
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "text": {}
       },
-      "pluginVersion": "8.3.2",
+      "pluginVersion": "9.5.3",
       "targets": [
         {
           "datasource": "${prometheusds}",
+          "editorMode": "builder",
           "exemplar": false,
-          "expr": "argo_workflows_count{origin_prometheus=~\"^$dc$\",kubernetes_namespace=~\"$ns\",status=\"Succeeded\"}",
-          "instant": true,
+          "expr": "argo_pod_missing",
+          "format": "time_series",
+          "instant": false,
           "interval": "",
-          "legendFormat": "",
-          "queryType": "randomWalk",
+          "legendFormat": "{{node_phase}}",
+          "range": true,
           "refId": "A"
         }
       ],
-      "title": "WF Succeeded",
+      "title": "Workflows missing Pods",
       "transparent": true,
-      "type": "stat"
-    },
-    {
-      "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 7
-      },
-      "id": 18,
-      "panels": [],
-      "title": "Number of Workflows currently accessible by the controller by status",
-      "type": "row"
+      "type": "gauge"
     },
     {
       "aliasColors": {},
@@ -462,98 +496,7 @@
         "h": 9,
         "w": 12,
         "x": 0,
-        "y": 8
-      },
-      "hiddenSeries": false,
-      "id": 2,
-      "legend": {
-        "alignAsTable": true,
-        "avg": false,
-        "current": true,
-        "hideEmpty": true,
-        "max": true,
-        "min": false,
-        "rightSide": false,
-        "show": true,
-        "sort": "current",
-        "sortDesc": true,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 2,
-      "nullPointMode": "null",
-      "options": {
-        "alertThreshold": true
-      },
-      "percentage": false,
-      "pluginVersion": "8.3.2",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "datasource": "${prometheusds}",
-          "exemplar": true,
-          "expr": "argo_workflows_count{status!~\"(Error|Failed)\",kubernetes_namespace=~\"$ns\",origin_prometheus=~\"^$dc$\"}",
-          "interval": "1m",
-          "legendFormat": "{{origin_prometheus}} : {{app}} : {{kubernetes_namespace}} : {{status}}",
-          "queryType": "randomWalk",
-          "refId": "A"
-        }
-      ],
-      "thresholds": [],
-      "timeRegions": [],
-      "title": "Workflow Status  ",
-      "tooltip": {
-        "shared": false,
-        "sort": 2,
-        "value_type": "individual"
-      },
-      "transparent": true,
-      "type": "graph",
-      "xaxis": {
-        "mode": "time",
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "$$hashKey": "object:151",
-          "decimals": 0,
-          "format": "short",
-          "logBase": 1,
-          "show": true
-        },
-        {
-          "$$hashKey": "object:152",
-          "format": "short",
-          "logBase": 1,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "${prometheusds}",
-      "decimals": 0,
-      "fill": 0,
-      "fillGradient": 1,
-      "gridPos": {
-        "h": 9,
-        "w": 12,
-        "x": 12,
-        "y": 8
+        "y": 15
       },
       "hiddenSeries": false,
       "id": 29,
@@ -578,7 +521,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "8.3.2",
+      "pluginVersion": "9.5.3",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -590,7 +533,7 @@
         {
           "datasource": "${prometheusds}",
           "exemplar": true,
-          "expr": "argo_workflows_count{status=~\"(Error|Failed)\",kubernetes_namespace=~\"$ns\",origin_prometheus=~\"^$dc$\"}",
+          "expr": "argo_workflows_count{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\",kubernetes_namespace=~\"$ns\",origin_prometheus=~\"^$dc$\",status=~\"(Error|Failed)\"}",
           "interval": "1m",
           "legendFormat": "{{origin_prometheus}} : {{app}} : {{kubernetes_namespace}} : {{status}}",
           "queryType": "randomWalk",
@@ -632,15 +575,110 @@
       }
     },
     {
+      "datasource": "${prometheusds}",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 15
+      },
+      "id": 32,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "9.5.3",
+      "targets": [
+        {
+          "datasource": "${prometheusds}",
+          "editorMode": "code",
+          "expr": "argo_workflows_error_count{}",
+          "legendFormat": "{{cause}}",
+          "range": true,
+          "refId": "errors rate"
+        }
+      ],
+      "title": "Workflows Errors rate",
+      "transparent": true,
+      "type": "timeseries"
+    },
+    {
       "collapsed": false,
+      "datasource": "${prometheusds}",
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 17
+        "y": 24
       },
       "id": 20,
       "panels": [],
+      "targets": [
+        {
+          "datasource": "${prometheusds}",
+          "refId": "A"
+        }
+      ],
       "title": "Histogram of durations of operations",
       "type": "row"
     },
@@ -657,7 +695,7 @@
         "h": 9,
         "w": 24,
         "x": 0,
-        "y": 18
+        "y": 25
       },
       "hiddenSeries": false,
       "id": 14,
@@ -682,7 +720,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "8.3.2",
+      "pluginVersion": "9.5.3",
       "pointradius": 2,
       "points": true,
       "renderer": "flot",
@@ -694,7 +732,7 @@
         {
           "datasource": "${prometheusds}",
           "exemplar": true,
-          "expr": "histogram_quantile(0.95, sum(rate(argo_workflows_operation_duration_seconds_bucket{origin_prometheus=~\"^$dc$\",kubernetes_namespace=~\"^$ns$\"}[5m])) by (le,origin_prometheus,kubernetes_namespace)) ",
+          "expr": "histogram_quantile(0.95, sum by(le, origin_prometheus, kubernetes_namespace) (rate(argo_workflows_operation_duration_seconds_bucket{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\",kubernetes_namespace=~\"^$ns$\",origin_prometheus=~\"^$dc$\"}[5m])))",
           "interval": "1m",
           "legendFormat": "{{origin_prometheus}} : {{kubernetes_namespace}} : 95th ",
           "refId": "B"
@@ -736,14 +774,21 @@
     },
     {
       "collapsed": false,
+      "datasource": "${prometheusds}",
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 27
+        "y": 34
       },
       "id": 22,
       "panels": [],
+      "targets": [
+        {
+          "datasource": "${prometheusds}",
+          "refId": "A"
+        }
+      ],
       "title": "Adds to the queue",
       "type": "row"
     },
@@ -760,7 +805,7 @@
         "h": 9,
         "w": 24,
         "x": 0,
-        "y": 28
+        "y": 35
       },
       "hiddenSeries": false,
       "id": 15,
@@ -785,7 +830,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "8.3.2",
+      "pluginVersion": "9.5.3",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -797,7 +842,7 @@
         {
           "datasource": "${prometheusds}",
           "exemplar": true,
-          "expr": "delta(argo_workflows_queue_adds_count{origin_prometheus=~\"^$dc$\",kubernetes_namespace=~\"$ns\"}[2m])",
+          "expr": "delta(argo_workflows_queue_adds_count{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\",kubernetes_namespace=~\"$ns\",origin_prometheus=~\"^$dc$\"}[2m])",
           "interval": "1m",
           "legendFormat": "{{origin_prometheus}} : {{app}} : {{kubernetes_namespace}} : {{queue_name}}",
           "queryType": "randomWalk",
@@ -851,7 +896,7 @@
         "h": 9,
         "w": 12,
         "x": 0,
-        "y": 37
+        "y": 44
       },
       "hiddenSeries": false,
       "id": 16,
@@ -876,7 +921,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "8.3.2",
+      "pluginVersion": "9.5.3",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -888,7 +933,7 @@
         {
           "datasource": "${prometheusds}",
           "exemplar": true,
-          "expr": "argo_workflows_queue_depth_count{origin_prometheus=~\"^$dc$\",kubernetes_namespace=~\"$ns\"}",
+          "expr": "argo_workflows_queue_depth_count{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\",kubernetes_namespace=~\"$ns\",origin_prometheus=~\"^$dc$\"}",
           "interval": "1m",
           "legendFormat": "{{origin_prometheus}} : {{app}} : {{kubernetes_namespace}} : {{queue_name}}",
           "queryType": "randomWalk",
@@ -943,7 +988,7 @@
         "h": 9,
         "w": 12,
         "x": 12,
-        "y": 37
+        "y": 44
       },
       "hiddenSeries": false,
       "id": 23,
@@ -968,7 +1013,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "8.3.2",
+      "pluginVersion": "9.5.3",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -980,7 +1025,7 @@
         {
           "datasource": "${prometheusds}",
           "exemplar": true,
-          "expr": "  rate(argo_workflows_queue_latency_sum{queue_name=\"cron_wf_queue\",kubernetes_namespace=~\"^$ns$\"}[2m])\n/\n  rate(argo_workflows_queue_latency_count{queue_name=\"cron_wf_queue\",kubernetes_namespace=~\"^$ns$\",origin_prometheus=~\"^$dc$\"}[2m])",
+          "expr": "rate(argo_workflows_queue_latency_sum{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\",kubernetes_namespace=~\"^$ns$\",queue_name=\"cron_wf_queue\"}[2m]) / rate(argo_workflows_queue_latency_count{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\",kubernetes_namespace=~\"^$ns$\",origin_prometheus=~\"^$dc$\",queue_name=\"cron_wf_queue\"}[2m])",
           "interval": "1m",
           "legendFormat": "{{origin_prometheus}} : {{app}} : {{kubernetes_namespace}} : {{queue_name}}",
           "queryType": "randomWalk",
@@ -989,7 +1034,7 @@
         {
           "datasource": "${prometheusds}",
           "exemplar": true,
-          "expr": "  rate(argo_workflows_queue_latency_sum{queue_name=\"pod_cleanup_queue\",kubernetes_namespace=~\"^$ns$\",origin_prometheus=~\"^$dc$\"}[2m])\n/\n  rate(argo_workflows_queue_latency_count{queue_name=\"pod_cleanup_queue\",kubernetes_namespace=~\"^$ns$\",origin_prometheus=~\"^$dc$\"}[2m])",
+          "expr": "rate(argo_workflows_queue_latency_sum{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\",kubernetes_namespace=~\"^$ns$\",origin_prometheus=~\"^$dc$\",queue_name=\"pod_cleanup_queue\"}[2m]) / rate(argo_workflows_queue_latency_count{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\",kubernetes_namespace=~\"^$ns$\",origin_prometheus=~\"^$dc$\",queue_name=\"pod_cleanup_queue\"}[2m])",
           "interval": "1m",
           "legendFormat": "{{origin_prometheus}} : {{app}} : {{kubernetes_namespace}} : {{queue_name}}",
           "refId": "B"
@@ -997,7 +1042,7 @@
         {
           "datasource": "${prometheusds}",
           "exemplar": true,
-          "expr": "  rate(argo_workflows_queue_latency_sum{queue_name=\"cron_wf_queue\",kubernetes_namespace=~\"^$ns$\",origin_prometheus=~\"^$dc$\"}[2m])\n/\n  rate(argo_workflows_queue_latency_count{queue_name=\"cron_wf_queue\",kubernetes_namespace=~\"^$ns$\",origin_prometheus=~\"^$dc$\"}[2m])",
+          "expr": "rate(argo_workflows_queue_latency_sum{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\",kubernetes_namespace=~\"^$ns$\",origin_prometheus=~\"^$dc$\",queue_name=\"cron_wf_queue\"}[2m]) / rate(argo_workflows_queue_latency_count{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\",kubernetes_namespace=~\"^$ns$\",origin_prometheus=~\"^$dc$\",queue_name=\"cron_wf_queue\"}[2m])",
           "hide": false,
           "interval": "1m",
           "legendFormat": "{{origin_prometheus}} : {{app}} : {{kubernetes_namespace}} : {{queue_name}}",
@@ -1006,7 +1051,7 @@
         {
           "datasource": "${prometheusds}",
           "exemplar": true,
-          "expr": "  rate(argo_workflows_queue_latency_sum{queue_name=\"workflow_queue\",kubernetes_namespace=~\"^$ns$\",origin_prometheus=~\"^$dc$\"}[2m])\n/\n  rate(argo_workflows_queue_latency_count{queue_name=\"workflow_queue\",kubernetes_namespace=~\"^$ns$\",origin_prometheus=~\"^$dc$\"}[2m])",
+          "expr": "rate(argo_workflows_queue_latency_sum{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\",kubernetes_namespace=~\"^$ns$\",origin_prometheus=~\"^$dc$\",queue_name=\"workflow_queue\"}[2m]) / rate(argo_workflows_queue_latency_count{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\",kubernetes_namespace=~\"^$ns$\",origin_prometheus=~\"^$dc$\",queue_name=\"workflow_queue\"}[2m])",
           "hide": false,
           "interval": "1m",
           "legendFormat": "{{origin_prometheus}} : {{app}} : {{kubernetes_namespace}} : {{queue_name}}",
@@ -1047,126 +1092,188 @@
       "yaxis": {
         "align": false
       }
-    },
-    {
-      "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 46
-      },
-      "id": 25,
-      "panels": [],
-      "title": "Total number of log messages",
-      "type": "row"
-    },
-    {
-      "aliasColors": {},
-      "bars": true,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "${prometheusds}",
-      "decimals": 2,
-      "description": "",
-      "fill": 1,
-      "fillGradient": 1,
-      "gridPos": {
-        "h": 9,
-        "w": 24,
-        "x": 0,
-        "y": 47
-      },
-      "hiddenSeries": false,
-      "id": 26,
-      "legend": {
-        "alignAsTable": true,
-        "avg": false,
-        "current": true,
-        "hideEmpty": true,
-        "max": true,
-        "min": false,
-        "rightSide": false,
-        "show": true,
-        "sort": "current",
-        "sortDesc": true,
-        "total": false,
-        "values": true
-      },
-      "lines": false,
-      "linewidth": 2,
-      "nullPointMode": "null",
-      "options": {
-        "alertThreshold": true
-      },
-      "percentage": false,
-      "pluginVersion": "8.3.2",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "datasource": "${prometheusds}",
-          "exemplar": true,
-          "expr": "log_messages{kubernetes_namespace=~\"$ns\",origin_prometheus=~\"^$dc$\"}",
-          "interval": "1m",
-          "legendFormat": "{{origin_prometheus}} : {{app}} : {{kubernetes_namespace}} : {{level}}",
-          "queryType": "randomWalk",
-          "refId": "A"
-        }
-      ],
-      "thresholds": [],
-      "timeRegions": [],
-      "title": "Log messages",
-      "tooltip": {
-        "shared": false,
-        "sort": 2,
-        "value_type": "individual"
-      },
-      "transparent": true,
-      "type": "graph",
-      "xaxis": {
-        "mode": "time",
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "$$hashKey": "object:151",
-          "decimals": 2,
-          "format": "short",
-          "label": "count/sec",
-          "logBase": 1,
-          "show": true
-        },
-        {
-          "$$hashKey": "object:152",
-          "format": "short",
-          "logBase": 1,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false
-      }
     }
   ],
   "refresh": "1m",
-  "schemaVersion": 33,
+  "schemaVersion": 38,
   "style": "dark",
   "tags": [
     "ckf",
-    "argo"
+    "argo",
+    "charm: grafana-agent-k8s"
   ],
   "templating": {
     "list": [
       {
-        "current": {},
-        "datasource": "${prometheusds}",
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "hide": 0,
+        "includeAll": true,
+        "label": "Loki datasource",
+        "multi": true,
+        "name": "lokids",
+        "options": [],
+        "query": "loki",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "hide": 0,
+        "includeAll": true,
+        "label": "Prometheus datasource",
+        "multi": true,
+        "name": "prometheusds",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "uid": "${prometheusds}"
+        },
+        "definition": "label_values(up{juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_application=~\"$juju_application\"},juju_unit)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Juju unit",
+        "multi": true,
+        "name": "juju_unit",
+        "options": [],
+        "query": {
+          "query": "label_values(up{juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_application=~\"$juju_application\"},juju_unit)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "uid": "${prometheusds}"
+        },
+        "definition": "label_values(up{juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\"},juju_application)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Juju application",
+        "multi": true,
+        "name": "juju_application",
+        "options": [],
+        "query": {
+          "query": "label_values(up{juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\"},juju_application)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "uid": "${prometheusds}"
+        },
+        "definition": "label_values(up{juju_model=~\"$juju_model\"},juju_model_uuid)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Juju model uuid",
+        "multi": true,
+        "name": "juju_model_uuid",
+        "options": [],
+        "query": {
+          "query": "label_values(up{juju_model=~\"$juju_model\"},juju_model_uuid)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "uid": "${prometheusds}"
+        },
+        "definition": "label_values(up,juju_model)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Juju model",
+        "multi": true,
+        "name": "juju_model",
+        "options": [],
+        "query": {
+          "query": "label_values(up,juju_model)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "current": {
+          "isNone": true,
+          "selected": false,
+          "text": "None",
+          "value": ""
+        },
+        "datasource": {
+          "uid": "${prometheusds}"
+        },
         "definition": "label_values(argo_workflows_count,origin_prometheus) ",
         "description": "Kubernetes datacenter",
         "hide": 0,
@@ -1190,8 +1297,18 @@
       },
       {
         "allValue": ".*",
-        "current": {},
-        "datasource": "${prometheusds}",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": {
+          "uid": "${prometheusds}"
+        },
         "definition": "label_values(argo_workflows_count{origin_prometheus=~\"^$dc$\"},kubernetes_namespace) ",
         "description": "Kubernetes namespace",
         "hide": 0,
@@ -1222,8 +1339,7 @@
   "timepicker": {},
   "timezone": "",
   "title": "ArgoWorkflow Metrics",
-  "uid": "Qcsy6bx7z",
-  "version": 7,
-  "weekStart": "",
-  "gnetId": 13927
+  "uid": "a21866dd2b3b2e960944411b8860991ce7a2202c",
+  "version": 1,
+  "weekStart": ""
 }
