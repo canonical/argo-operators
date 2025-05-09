@@ -1,9 +1,11 @@
 # Copyright 2023 Canonical Ltd.
 # See LICENSE file for licensing details.
-# chisme Added because of TODO link issue
-# Remove once issue is resolved
-charmed-kubeflow-chisme>=0.2.0
 coverage
 pytest
 pytest-mock
--r requirements.txt
+
+# Added because of TODO link issue
+# Once the above are resolved, we should remove those packages and
+# instead do: -r requirements.txt
+charmed-kubeflow-chisme>=0.2.0
+cosl

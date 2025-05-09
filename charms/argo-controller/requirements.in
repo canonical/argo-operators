@@ -3,10 +3,10 @@
 # Pinning charmed-kubeflow-chisme will avoid pip-compile to resolve
 # conflicts by using an older version of this package.
 # Version >=0.2.0 contains the base charm code that's needed.
-cosl
 lightkube
 ops
 serialized-data-interface
 
 # Commented because of TODO link issue
 #charmed-kubeflow-chisme>=0.2.0
+#cosl

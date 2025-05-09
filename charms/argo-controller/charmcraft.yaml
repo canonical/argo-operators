@@ -16,6 +16,7 @@ parts:
     # Once it's resolved we should move those in requirements.in
     charm-binary-python-packages:
       - charmed-kubeflow-chisme==0.4.3
+      - cosl==0.1.0
     # Following lines are needed due to https://github.com/canonical/charmcraft/issues/1722
     build-snaps: [rustup]
     build-packages: [pkg-config, libffi-dev, libssl-dev]
