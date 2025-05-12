@@ -14,18 +14,14 @@ from charmed_kubeflow_chisme.testing import (
     deploy_and_assert_grafana_agent,
     get_alert_rules,
 )
+from charms_dependencies import MINIO
 from pytest_operator.plugin import OpsTest
 
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 CHARM_ROOT = "."
 ARGO_CONTROLLER = "argo-controller"
 ARGO_CONTROLLER_TRUST = True
-MINIO = "minio"
-MINIO_CHANNEL = "latest/edge"
-MINIO_CONFIG = {
-    "access-key": "minio",
-    "secret-key": "minio-secret-key",
-}
+
 
 log = logging.getLogger(__name__)
 
@@ -46,8 +42,12 @@ async def test_build_and_deploy_with_relations(ops_test: OpsTest):
     )
 
     # Deploy required relations
-    await ops_test.model.deploy(entity_url=MINIO, config=MINIO_CONFIG, channel=MINIO_CHANNEL)
-    await ops_test.model.integrate(f"{ARGO_CONTROLLER}:object-storage", f"{MINIO}:object-storage")
+    await ops_test.model.deploy(
+        entity_url=MINIO.charm, config=MINIO.config, channel=MINIO.channel, trust=MINIO.trust
+    )
+    await ops_test.model.integrate(
+        f"{ARGO_CONTROLLER}:object-storage", f"{MINIO.charm}:object-storage"
+    )
 
     await ops_test.model.wait_for_idle(timeout=60 * 10)
     # TODO: This does not handle blocked status right.  Sometimes it passes when argo-controller
@@ -72,7 +72,7 @@ async def create_artifact_bucket(ops_test: OpsTest):
     bucket = "mlpipeline"
 
     minio_cmd = (
-        f"mc alias set {alias} {url} {MINIO_CONFIG['access-key']} {MINIO_CONFIG['secret-key']}"  # noqa
+        f"mc alias set {alias} {url} {MINIO.config['access-key']} {MINIO.config['secret-key']}"  # noqa
         f"&& mc mb {alias}/{bucket} -p"
     )
     kubectl_cmd = (
