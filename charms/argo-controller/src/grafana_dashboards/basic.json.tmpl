@@ -23,7 +23,6 @@
   "fiscalYearStartMonth": 0,
   "gnetId": 13927,
   "graphTooltip": 1,
-  "id": 29,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -330,7 +329,7 @@
     },
     {
       "datasource": "${prometheusds}",
-      "description": "",
+      "description": "The rate of K8s API requests for each status code",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -407,13 +406,13 @@
         {
           "datasource": "${prometheusds}",
           "editorMode": "code",
-          "expr": "sum(rate(argo_workflows_k8s_request_total[5m])) by (status_code)",
+          "expr": "sum by(status_code) (rate(argo_workflows_k8s_request_total{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\"}[5m]))",
           "legendFormat": "{{status_code}}",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Total K8s requests rate",
+      "title": "Kubernetes API requests rate",
       "transparent": true,
       "type": "timeseries"
     },
@@ -470,7 +469,7 @@
           "datasource": "${prometheusds}",
           "editorMode": "builder",
           "exemplar": false,
-          "expr": "argo_pod_missing",
+          "expr": "argo_pod_missing{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\"}",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -490,6 +489,7 @@
       "dashes": false,
       "datasource": "${prometheusds}",
       "decimals": 0,
+      "description": "The number of workflows monitored by the controller that are in Error or Failed status",
       "fill": 0,
       "fillGradient": 1,
       "gridPos": {
@@ -561,6 +561,7 @@
           "decimals": 0,
           "format": "short",
           "logBase": 1,
+          "min": "0",
           "show": true
         },
         {
@@ -576,6 +577,7 @@
     },
     {
       "datasource": "${prometheusds}",
+      "description": "The number of new errors encountered by the controller over the past 5 minutes",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -652,13 +654,13 @@
         {
           "datasource": "${prometheusds}",
           "editorMode": "code",
-          "expr": "increase(argo_workflows_error_count[5m])",
+          "expr": "increase(argo_workflows_error_count{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\"}[5m])",
           "legendFormat": "{{cause}}",
           "range": true,
           "refId": "errors rate"
         }
       ],
-      "title": "Workflow Errors Increase (5m)",
+      "title": "New Controller errors in the past 5 minutes",
       "transparent": true,
       "type": "timeseries"
     },
@@ -689,6 +691,7 @@
       "dashes": false,
       "datasource": "${prometheusds}",
       "decimals": 2,
+      "description": "The 95th percentile of Argo workflows operation durations over a 5-minute window",
       "fill": 1,
       "fillGradient": 1,
       "gridPos": {
@@ -799,6 +802,7 @@
       "dashes": false,
       "datasource": "${prometheusds}",
       "decimals": 2,
+      "description": "The rate of Argo workflows queue additions over a 2-minute window",
       "fill": 1,
       "fillGradient": 1,
       "gridPos": {
@@ -851,7 +855,7 @@
       ],
       "thresholds": [],
       "timeRegions": [],
-      "title": "Workflow queue adds ",
+      "title": "Workflow queue adds rate",
       "tooltip": {
         "shared": false,
         "sort": 2,
@@ -867,8 +871,8 @@
       "yaxes": [
         {
           "$$hashKey": "object:151",
-          "decimals": 2,
-          "format": "short",
+          "decimals": 0,
+          "format": "none",
           "logBase": 1,
           "show": true
         },
@@ -890,6 +894,7 @@
       "dashes": false,
       "datasource": "${prometheusds}",
       "decimals": 2,
+      "description": "The current depth of the Argo workflows queue",
       "fill": 1,
       "fillGradient": 1,
       "gridPos": {
@@ -958,7 +963,7 @@
       "yaxes": [
         {
           "$$hashKey": "object:151",
-          "decimals": 2,
+          "decimals": 0,
           "format": "short",
           "logBase": 1,
           "min": "0",
@@ -982,6 +987,7 @@
       "dashes": false,
       "datasource": "${prometheusds}",
       "decimals": 2,
+      "description": "The average latency for each queue over a 2-minute window",
       "fill": 0,
       "fillGradient": 1,
       "gridPos": {
@@ -1060,7 +1066,7 @@
       ],
       "thresholds": [],
       "timeRegions": [],
-      "title": "Time objects spend waiting in the queue",
+      "title": "Average waiting time in each queue",
       "tooltip": {
         "shared": false,
         "sort": 2,
