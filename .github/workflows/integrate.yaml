@@ -21,10 +21,6 @@ jobs:
     steps:
     - name: Check out repo
       uses: actions/checkout@v3
-    - name: Set up Python 3.8
-      uses: actions/setup-python@v5.3.0
-      with:
-        python-version: 3.8
     - run: pip install tox
     - run: tox -vve argo-controller-lint
 
@@ -34,10 +30,6 @@ jobs:
     steps:
     - name: Check out repo
       uses: actions/checkout@v3
-    - name: Set up Python 3.8
-      uses: actions/setup-python@v5.3.0
-      with:
-        python-version: 3.8
     - run: pip install tox
     - run: tox -vve argo-controller-unit
 
@@ -55,10 +47,6 @@ jobs:
         charm: [argo-controller]
     steps:
     - uses: actions/checkout@v3
-    - name: Set up Python 3.8
-      uses: actions/setup-python@v5.3.0
-      with:
-        python-version: 3.8
     - name: Setup operator environment
       uses: charmed-kubernetes/actions-operator@main
       with:
