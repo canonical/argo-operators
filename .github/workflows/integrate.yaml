@@ -79,9 +79,9 @@ jobs:
       if: failure()
 
     - name: Get application logs
-      run: kubectl logs -n testing --tail 1000 -ljuju-app=${{ matrix.charm }}
+      run: kubectl logs -n testing --tail 1000 -lapp.kubernetes.io/name=${{ matrix.charm }}
       if: failure()
 
     - name: Get argo-controller operator logs
-      run: kubectl logs -n testing --tail 1000 -ljuju-operator=${{ matrix.charm }}
+      run: kubectl logs -n testing --tail 1000 -loperator.juju.is/name==${{ matrix.charm }}
       if: failure()
