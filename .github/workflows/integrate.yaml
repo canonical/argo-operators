@@ -21,10 +21,10 @@ jobs:
     steps:
     - name: Check out repo
       uses: actions/checkout@v3
-    - name: Set up Python 3.8
-      uses: actions/setup-python@v5.3.0
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v5.6.0
       with:
-        python-version: 3.8
+        python-version: "3.12"
     - run: pip install tox
     - run: tox -vve argo-controller-lint
 
@@ -34,10 +34,10 @@ jobs:
     steps:
     - name: Check out repo
       uses: actions/checkout@v3
-    - name: Set up Python 3.8
-      uses: actions/setup-python@v5.3.0
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v5.6.0
       with:
-        python-version: 3.8
+        python-version: "3.12"
     - run: pip install tox
     - run: tox -vve argo-controller-unit
 
@@ -55,10 +55,6 @@ jobs:
         charm: [argo-controller]
     steps:
     - uses: actions/checkout@v3
-    - name: Set up Python 3.8
-      uses: actions/setup-python@v5.3.0
-      with:
-        python-version: 3.8
     - name: Setup operator environment
       uses: charmed-kubernetes/actions-operator@main
       with:
@@ -91,9 +87,9 @@ jobs:
       if: failure()
 
     - name: Get application logs
-      run: kubectl logs -n testing --tail 1000 -ljuju-app=${{ matrix.charm }}
+      run: kubectl logs -n testing --tail 1000 -lapp.kubernetes.io/name=${{ matrix.charm }}
       if: failure()
 
     - name: Get argo-controller operator logs
-      run: kubectl logs -n testing --tail 1000 -ljuju-operator=${{ matrix.charm }}
+      run: kubectl logs -n testing --tail 1000 -loperator.juju.is/name==${{ matrix.charm }}
       if: failure()
