@@ -12,7 +12,7 @@ resources:
     type: oci-image
     description: 'Backing OCI image'
     auto-fetch: true
-    upstream-source: gcr.io/ml-pipeline/workflow-controller:v3.4.17-license-compliance
+    upstream-source: charmedkubeflow/workflow-controller:3.4.17-627976f
 containers:
   argo-controller:
     resource: oci-image
