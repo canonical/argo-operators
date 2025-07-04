@@ -23,8 +23,8 @@ from charms.prometheus_k8s.v0.prometheus_scrape import MetricsEndpointProvider
 from lightkube.models.core_v1 import ServicePort
 from lightkube.resources.apiextensions_v1 import CustomResourceDefinition
 from lightkube.resources.core_v1 import ConfigMap, Secret
+from ops import main
 from ops.charm import CharmBase
-from ops.main import main
 
 from components.pebble_component import (
     ARGO_CONTROLLER_CONFIGMAP,
