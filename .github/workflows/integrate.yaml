@@ -20,12 +20,8 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
     - name: Check out repo
-      uses: actions/checkout@v3
-    - name: Set up Python 3.12
-      uses: actions/setup-python@v5.6.0
-      with:
-        python-version: "3.12"
-    - run: pip install tox
+      uses: actions/checkout@v4
+    - run: pipx install tox
     - run: tox -vve argo-controller-lint
 
   unit:
@@ -33,12 +29,8 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
     - name: Check out repo
-      uses: actions/checkout@v3
-    - name: Set up Python 3.12
-      uses: actions/setup-python@v5.6.0
-      with:
-        python-version: "3.12"
-    - run: pip install tox
+      uses: actions/checkout@v4
+    - run: pipx install tox
     - run: tox -vve argo-controller-unit
 
   terraform-checks:
@@ -54,7 +46,7 @@ jobs:
       matrix:
         charm: [argo-controller]
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Setup operator environment
       uses: charmed-kubernetes/actions-operator@main
       with:
