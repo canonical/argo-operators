@@ -147,6 +147,7 @@ def test_kubernetes_created_method(
     harness.charm.on.install.emit()
 
     # FIXME: This is a hardcoded count of the Kubernetes objects that should be created.
+    # The `reconcile` function is called twice, so we expect 2 apply calls for each resource
     assert mocked_lightkube_client.apply.call_count == 28
     assert isinstance(harness.charm.kubernetes_resources.status, ActiveStatus)
 
