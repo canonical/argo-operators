@@ -8,4 +8,4 @@ annotations:
   description: >
     Detected missing workflow pods in the last 5 minutes.
     Missing pods are expected pods that never appeared or were deleted.
-    See https://argo-workflows.readthedocs.io/en/release-3.4/metrics/#argo_pod_missing for details.
+    See https://argo-workflows.readthedocs.io/en/release-3.5/metrics/#argo_pod_missing for details.
