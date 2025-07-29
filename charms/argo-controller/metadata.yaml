@@ -12,7 +12,7 @@ resources:
     type: oci-image
     description: 'Backing OCI image'
     auto-fetch: true
-    upstream-source: charmedkubeflow/workflow-controller:3.4.17-627976f
+    upstream-source: quay.io/argoproj/workflow-controller:v3.5.14
 containers:
   argo-controller:
     resource: oci-image
