@@ -12,7 +12,7 @@ resources:
     type: oci-image
     description: 'Backing OCI image'
     auto-fetch: true
-    upstream-source: docker.io/charmedkubeflow/workflow-controller:3.5.14-ee1fda3
+    upstream-source: docker.io/charmedkubeflow/workflow-controller:3.5.14-fe35623
 containers:
   argo-controller:
     resource: oci-image
