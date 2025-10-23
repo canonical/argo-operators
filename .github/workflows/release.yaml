@@ -23,11 +23,10 @@ jobs:
       - name: Release charm to channel
         uses: canonical/charming-actions/release-charm@2.6.2
         with:
-          base-channel: '24.04'
           credentials: ${{ secrets.CHARMCRAFT_CREDENTIALS }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           destination-channel: ${{ github.event.inputs.destination-channel }}
           origin-channel: ${{ github.event.inputs.origin-channel }}
-          base-channel: "24.04"
+          base-channel: '24.04'
           tag-prefix: ${{ github.event.inputs.charm-name }}
           charm-path: charms/${{ github.event.inputs.charm-name}}
