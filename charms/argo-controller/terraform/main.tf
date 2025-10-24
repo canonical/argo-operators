@@ -1,6 +1,7 @@
 resource "juju_application" "argo_controller" {
   charm {
     name     = "argo-controller"
+    base     = var.base
     channel  = var.channel
     revision = var.revision
   }
