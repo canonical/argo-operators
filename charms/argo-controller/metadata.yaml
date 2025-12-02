@@ -16,6 +16,8 @@ resources:
 containers:
   argo-controller:
     resource: oci-image
+    uid: 584792
+    gid: 584792
 requires:
   object-storage:
     interface: object-storage
@@ -54,3 +56,4 @@ provides:
     interface: prometheus_scrape
   grafana-dashboard:
     interface: grafana_dashboard
+charm-user: non-root
