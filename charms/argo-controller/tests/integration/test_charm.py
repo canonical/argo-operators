@@ -4,6 +4,7 @@
 import logging
 from pathlib import Path
 
+import lightkube
 import pytest
 import yaml
 from charmed_kubeflow_chisme.testing import (
@@ -11,19 +12,30 @@ from charmed_kubeflow_chisme.testing import (
     assert_alert_rules,
     assert_logging,
     assert_metrics_endpoint,
+    assert_security_context,
     deploy_and_assert_grafana_agent,
+    generate_container_securitycontext_map,
     get_alert_rules,
+    get_pod_names,
 )
 from charms_dependencies import MINIO
 from pytest_operator.plugin import OpsTest
 
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
+CONTAINERS_SECURITY_CONTEXT_MAP = generate_container_securitycontext_map(METADATA)
 CHARM_ROOT = "."
-ARGO_CONTROLLER = "argo-controller"
+ARGO_CONTROLLER = METADATA["name"]
 ARGO_CONTROLLER_TRUST = True
 
 
 log = logging.getLogger(__name__)
+
+
+@pytest.fixture(scope="session")
+def lightkube_client() -> lightkube.Client:
+    """Returns lightkube Kubernetes client"""
+    client = lightkube.Client(field_manager=f"{ARGO_CONTROLLER}")
+    return client
 
 
 @pytest.mark.abort_on_fail
@@ -162,3 +174,24 @@ async def test_logging(ops_test):
     """Test logging is defined in relation data bag."""
     app = ops_test.model.applications[GRAFANA_AGENT_APP]
     await assert_logging(app)
+
+
+@pytest.mark.parametrize("container_name", list(CONTAINERS_SECURITY_CONTEXT_MAP.keys()))
+async def test_container_security_context(
+    ops_test: OpsTest,
+    lightkube_client: lightkube.Client,
+    container_name: str,
+):
+    """Test container security context is correctly set.
+
+    Verify that container spec defines the security context with correct
+    user ID and group ID.
+    """
+    pod_name = get_pod_names(ops_test.model.name, ARGO_CONTROLLER)[0]
+    assert_security_context(
+        lightkube_client,
+        pod_name,
+        container_name,
+        CONTAINERS_SECURITY_CONTEXT_MAP,
+        ops_test.model.name,
+    )
