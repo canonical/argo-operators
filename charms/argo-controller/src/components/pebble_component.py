@@ -58,7 +58,6 @@ class ArgoControllerPebbleService(PebbleServiceComponent):
                             f"{self.model.config[EXECUTOR_IMAGE_CONFIG_NAME]}"
                         ),
                         "startup": "enabled",
-                        "user": "_daemon_",  # This is needed only for rocks
                         "environment": self.environment,
                         "on-check-failure": {LIVENESS_PROBE_NAME: "restart"},
                     }
