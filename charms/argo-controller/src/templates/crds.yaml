@@ -2025,12 +2025,27 @@ spec:
                   type: object
                 type: object
             type: object
-            x-kubernetes-map-type: atomic
-            x-kubernetes-preserve-unknown-fields: true
           status:
+            properties:
+              artifactResultsByNode:
+                additionalProperties:
+                  properties:
+                    artifactResults:
+                      additionalProperties:
+                        properties:
+                          error:
+                            type: string
+                          name:
+                            type: string
+                          success:
+                            type: boolean
+                        required:
+                        - name
+                        type: object
+                      type: object
+                  type: object
+                type: object
             type: object
-            x-kubernetes-map-type: atomic
-            x-kubernetes-preserve-unknown-fields: true
         required:
         - metadata
         - spec
@@ -2791,6 +2806,8 @@ spec:
             x-kubernetes-preserve-unknown-fields: true
           status:
             type: object
+            x-kubernetes-map-type: atomic
+            x-kubernetes-preserve-unknown-fields: true
         required:
         - metadata
         - spec
