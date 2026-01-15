@@ -17,6 +17,8 @@ data:
         key: secretkey
   executor: |
     imagePullPolicy: IfNotPresent
+  metricsConfig: |
+    secure: false
 kind: ConfigMap
 metadata:
   labels:
