@@ -9,8 +9,8 @@ logger = logging.getLogger(__name__)
 
 ARGO_CONTROLLER_CONFIGMAP = "argo-workflow-controller-configmap"
 ARGO_KEYFORMAT = (
-    "private-artifacts/{{workflow.namespace}}/"
-    "{{workflow.name}}/{{workflow.creationTimestamp.Y}}/"
+    "artifacts/{{workflow.name}}/"
+    "{{workflow.creationTimestamp.Y}}/"
     "{{workflow.creationTimestamp.m}}/"
     "{{workflow.creationTimestamp.d}}/"
     "{{pod.name}}"
