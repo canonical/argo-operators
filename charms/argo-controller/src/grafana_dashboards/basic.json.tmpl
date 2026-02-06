@@ -469,7 +469,7 @@
           "datasource": "${prometheusds}",
           "editorMode": "builder",
           "exemplar": false,
-          "expr": "argo_pod_missing{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\"}",
+          "expr": "argo_workflows_pod_missing_total{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\"}",
           "format": "time_series",
           "instant": false,
           "interval": "",
