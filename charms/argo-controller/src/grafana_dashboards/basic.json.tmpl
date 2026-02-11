@@ -469,7 +469,7 @@
           "datasource": "${prometheusds}",
           "editorMode": "builder",
           "exemplar": false,
-          "expr": "argo_workflows_pod_missing_total{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\"}",
+          "expr": "sum(increase(argo_workflows_pod_missing_total{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\"}[10m])) by (node_phase)",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -478,7 +478,7 @@
           "refId": "A"
         }
       ],
-      "title": "Workflows missing Pods",
+      "title": "Workflows missing Pods in the past 10 minutes",
       "transparent": true,
       "type": "gauge"
     },

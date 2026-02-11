@@ -1,6 +1,6 @@
 alert: ArgoWorkflowPodsMissing
 expr: sum without (node_phase, recently_started) (increase(argo_workflows_pod_missing_total[10m])) > 0
-for: 0s
+for: 5m
 labels:
   severity: critical
 annotations:
