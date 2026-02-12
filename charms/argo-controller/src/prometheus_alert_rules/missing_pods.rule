@@ -1,11 +1,11 @@
 alert: ArgoWorkflowPodsMissing
-expr: max_over_time(argo_pod_missing[5m]) > 0
+expr: sum without (node_phase, recently_started) (increase(argo_workflows_pod_missing_total[10m])) > 0
 for: 5m
 labels:
   severity: critical
 annotations:
   summary: "Missing workflow pods detected"
   description: >
-    Detected missing workflow pods in the last 5 minutes.
-    Missing pods are expected pods that never appeared or were deleted.
-    See https://argo-workflows.readthedocs.io/en/release-3.5/metrics/#argo_pod_missing for details.
+    The number of missing workflow pods has increased in the last 5 minutes.
+    This indicates that expected pods never appeared or were deleted unexpectedly.
+    See https://argo-workflows.readthedocs.io/en/release-3.7/metrics/#pod_missing for details.
