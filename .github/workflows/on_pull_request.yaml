@@ -9,6 +9,16 @@ on:
 
 jobs:
 
+  populate-labels:
+    name: Populate labels
+    if: github.base_ref == 'main'
+    uses: canonical/charmed-kubeflow-workflows/.github/workflows/populate-labels.yaml@manos-backport-automation
+    secrets:
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
+    with:
+      track_file_path: ".github/automatic_backport_tracks.yaml"
+      label_prefix: "backport "
+
   tests:
     name: Run Tests
     uses: ./.github/workflows/integrate.yaml
