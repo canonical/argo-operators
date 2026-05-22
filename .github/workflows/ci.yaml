@@ -1,0 +1,107 @@
+# Copyright 2025 Canonical Ltd.
+# See LICENSE file for licensing details.
+
+name: CI
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - main
+      - track/**
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: pipx install tox
+      - run: tox -vve argo-controller-lint
+
+  unit:
+    name: Unit tests
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: pipx install tox
+      - run: tox -vve argo-controller-unit
+
+  terraform-checks:
+    name: Terraform
+    uses: canonical/charmed-kubeflow-workflows/.github/workflows/terraform-checks.yaml@main
+    with:
+      charm-path: ./charms/argo-controller
+
+  build:
+    name: Build charm
+    uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@main
+    strategy:
+      matrix:
+        charm:
+          - charms/argo-controller
+    with:
+      path-to-charm-directory: ${{ matrix.charm }}
+      cache: true
+
+  integration:
+    name: Integration test
+    needs:
+      - build
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        charm: [argo-controller]
+    steps:
+      - name: Maximise GH runner space
+        uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be
+
+      - uses: actions/checkout@v4
+
+      - name: Download packed charm
+        id: download-charm
+        uses: actions/download-artifact@v4
+        with:
+          pattern: ${{ matrix.charm }}-*
+          merge-multiple: true
+
+      - name: Install dependencies
+        run: pipx install tox
+
+      - name: Setup environment
+        run: |
+          sudo apt-get remove -y docker-ce docker-ce-cli containerd.io
+          sudo rm -rf /run/containerd
+          sudo snap install concierge --classic
+          sudo concierge prepare --trace
+
+      - name: Build and test
+        working-directory: ./charms/${{ matrix.charm }}
+        run: |
+          tox -vve integration -- --model testing --charm-path=${{ github.workspace }}/argo-controller_ubuntu@24.04-amd64.charm
+
+        # On failure, capture debugging resources
+      - name: Get all
+        run: kubectl get all -A
+        if: failure()
+
+      - name: Describe deployments
+        run: kubectl describe deployments -A
+        if: failure()
+
+      - name: Describe replicasets
+        run: kubectl describe replicasets -A
+        if: failure()
+
+      - name: Get juju status
+        run: juju status
+        if: failure()
+
+      - name: Get application logs
+        run: kubectl logs -n testing --tail 1000 -lapp.kubernetes.io/name=${{ matrix.charm }}
+        if: failure()
+
+      - name: Get argo-controller operator logs
+        run: kubectl logs -n testing --tail 1000 -loperator.juju.is/name==${{ matrix.charm }}
+        if: failure()

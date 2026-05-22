@@ -39,15 +39,19 @@ def lightkube_client() -> lightkube.Client:
 
 
 @pytest.mark.abort_on_fail
-async def test_build_and_deploy_with_relations(ops_test: OpsTest):
-    built_charm_path = await ops_test.build_charm(CHARM_ROOT)
-    log.info(f"Built charm {built_charm_path}")
+async def test_build_and_deploy_with_relations(ops_test: OpsTest, request):
+    entity_url = (
+        await ops_test.build_charm(CHARM_ROOT)
+        if not (entity_url := request.config.getoption("--charm-path"))
+        else entity_url
+    )
+    log.info(f"Built charm {entity_url}")
 
     image_path = METADATA["resources"]["oci-image"]["upstream-source"]
     resources = {"oci-image": image_path}
 
     await ops_test.model.deploy(
-        entity_url=built_charm_path,
+        entity_url=entity_url,
         application_name=ARGO_CONTROLLER,
         resources=resources,
         trust=ARGO_CONTROLLER_TRUST,
