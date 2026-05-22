@@ -4,7 +4,7 @@ from charmed_kubeflow_chisme.testing import CharmSpec
 
 MINIO = CharmSpec(
     charm="minio",
-    channel="latest/edge",
+    channel="1.10/edge",
     trust=False,
     config={
         "access-key": "minio",
