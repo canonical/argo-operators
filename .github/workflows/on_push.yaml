@@ -26,3 +26,5 @@ jobs:
     needs: tests
     uses: ./.github/workflows/publish.yaml
     secrets: inherit
+    permissions:
+      contents: write  # Needed to create git tags
