@@ -1,7 +1,7 @@
 # Copyright 2025 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-name: Release
+name: Release to Charmhub
 
 on:
   push:
@@ -10,22 +10,24 @@ on:
       - track/**
 
 jobs:
-  ci:
+  ci-tests:
     uses: ./.github/workflows/ci.yaml
     secrets: inherit
 
   release:
-    name: Release charm
-    needs:
-      - ci
-    uses: canonical/data-platform-workflows/.github/workflows/release_charm_edge.yaml@main
     strategy:
       matrix:
-        charm:
-          - charms/argo-controller
+        charm: ${{ fromJSON(needs.ci-tests.outputs.charm-paths) }}
+    name: Release charm | ${{ matrix.charm }}
+    needs:
+      - ci-tests
+    uses: canonical/data-platform-workflows/.github/workflows/release_charm_edge.yaml@v49.0.1
     with:
-      artifact-prefix: ${{ matrix.charm }}
-      track: latest
+      track: ${{ needs.ci-tests.outputs.track }}
+      artifact-prefix: ${{ needs.ci-tests.outputs.artifact-prefix }}
       path-to-charm-directory: ${{ matrix.charm }}
     secrets:
       charmhub-token: ${{ secrets.CHARMCRAFT_CREDENTIALS }}
+    permissions:
+      actions: read
+      contents: write  # Needed to create git tags
