@@ -29,3 +29,5 @@ jobs:
     name: Publish Charm
     uses: ./.github/workflows/publish.yaml
     secrets: inherit
+    permissions:
+      contents: write  # Needed to create git tags
