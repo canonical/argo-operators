@@ -170,9 +170,15 @@ jobs:
         if: always()
 
       - name: Get application logs
-        run: kubectl logs -n testing --tail 1000 -lapp.kubernetes.io/name=${{ matrix.charm }}
+        run: kubectl logs -n testing --tail 1000 -l app.kubernetes.io/name=${{ matrix.charm }} -c argo-controller
         if: failure()
 
       - name: Get argo-controller operator logs
-        run: kubectl logs -n testing --tail 1000 -loperator.juju.is/name==${{ matrix.charm }}
+        run: kubectl logs -n testing --tail 1000 -l app.kubernetes.io/name=${{ matrix.charm }} -c charm
+        if: failure()
+
+      - name: Collect charm debug artifacts
+        uses: canonical/kubeflow-ci/actions/dump-charm-debug-artifacts@main
+        with:
+          artifact-prefix: ${{ matrix.charm }}
         if: failure()
