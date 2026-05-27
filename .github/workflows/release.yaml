@@ -15,6 +15,7 @@ jobs:
     secrets: inherit
     permissions:
       actions: read
+      contents: read
 
   release:
     strategy:
