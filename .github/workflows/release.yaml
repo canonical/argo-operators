@@ -15,6 +15,7 @@ on:
         required: true
 
 jobs:
+<<<<<<< HEAD
   promote-charm:
     name: Promote charm
     runs-on: ubuntu-24.04
@@ -30,3 +31,29 @@ jobs:
           base-channel: '24.04'
           tag-prefix: ${{ github.event.inputs.charm-name }}
           charm-path: charms/${{ github.event.inputs.charm-name}}
+=======
+  ci-tests:
+    uses: ./.github/workflows/ci.yaml
+    secrets: inherit
+    permissions:
+      actions: read
+      contents: read
+
+  release:
+    strategy:
+      matrix:
+        charm: ${{ fromJSON(needs.ci-tests.outputs.charm-paths) }}
+    name: Release charm | ${{ matrix.charm }}
+    needs:
+      - ci-tests
+    uses: canonical/data-platform-workflows/.github/workflows/release_charm_edge.yaml@v49.0.1
+    with:
+      track: ${{ needs.ci-tests.outputs.track }}
+      artifact-prefix: ${{ needs.ci-tests.outputs.artifact-prefix }}
+      path-to-charm-directory: ${{ matrix.charm }}
+    secrets:
+      charmhub-token: ${{ secrets.CHARMCRAFT_CREDENTIALS }}
+    permissions:
+      actions: read
+      contents: write  # Needed to create git tags
+>>>>>>> 020c1ab (fix: Grant proper permissions to ci-tests job in release workflow (#331))
