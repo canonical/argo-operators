@@ -10,6 +10,21 @@ on:
       - track/**
 
 jobs:
+  promote-charm:
+    name: Promote charm
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Release charm to channel
+        uses: canonical/charming-actions/release-charm@2.6.2
+        with:
+          credentials: ${{ secrets.CHARMCRAFT_CREDENTIALS }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          destination-channel: ${{ github.event.inputs.destination-channel }}
+          origin-channel: ${{ github.event.inputs.origin-channel }}
+          base-channel: '24.04'
+          tag-prefix: ${{ github.event.inputs.charm-name }}
+          charm-path: charms/${{ github.event.inputs.charm-name}}
   ci-tests:
     uses: ./.github/workflows/ci.yaml
     secrets: inherit
