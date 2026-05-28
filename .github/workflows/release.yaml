@@ -1,21 +1,15 @@
-# reusable workflow triggered manually
-name: Release charm to other tracks and channels
+# Copyright 2025 Canonical Ltd.
+# See LICENSE file for licensing details.
+
+name: Release to Charmhub
 
 on:
-  workflow_dispatch:
-    inputs:
-      destination-channel:
-        description: 'Destination Channel'
-        required: true
-      origin-channel:
-        description: 'Origin Channel'
-        required: true
-      charm-name:
-        description: 'Charm subdirectory name'
-        required: true
+  push:
+    branches:
+      - main
+      - track/**
 
 jobs:
-<<<<<<< HEAD
   promote-charm:
     name: Promote charm
     runs-on: ubuntu-24.04
@@ -31,7 +25,6 @@ jobs:
           base-channel: '24.04'
           tag-prefix: ${{ github.event.inputs.charm-name }}
           charm-path: charms/${{ github.event.inputs.charm-name}}
-=======
   ci-tests:
     uses: ./.github/workflows/ci.yaml
     secrets: inherit
@@ -56,4 +49,3 @@ jobs:
     permissions:
       actions: read
       contents: write  # Needed to create git tags
->>>>>>> 020c1ab (fix: Grant proper permissions to ci-tests job in release workflow (#331))
