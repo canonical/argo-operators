@@ -1,7 +1,7 @@
 # Copyright 2023 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 from charmed_kubeflow_chisme.testing import add_sdi_relation_to_harness
@@ -9,6 +9,7 @@ from ops.model import ActiveStatus, BlockedStatus
 from ops.testing import Harness
 
 from charm import ArgoControllerOperator
+from components.s3_component import S3Component
 
 MOCK_OBJECT_STORAGE_DATA = {
     "access-key": "access-key",
@@ -17,6 +18,12 @@ MOCK_OBJECT_STORAGE_DATA = {
     "namespace": "namespace",
     "port": 1234,
     "secure": True,
+}
+
+MOCK_S3_DATA_BASE = {
+    "access-key": "access-key",
+    "secret-key": "secret-key",
+    "bucket": "mybucket",
 }
 
 EXPECTED_ENVIRONMENT = {
@@ -182,3 +189,48 @@ def test_pebble_services_running(
     # Assert the environment variables that are set from inputs are correctly applied
     environment = container.get_plan().services["argo-controller"].environment
     assert environment == EXPECTED_ENVIRONMENT
+
+
+@pytest.mark.parametrize(
+    "raw_endpoint, expected_endpoint",
+    [
+        ("http://10.0.0.1", "10.0.0.1"),
+        ("https://s3.example.com", "s3.example.com"),
+        ("http://10.0.0.1:9000", "10.0.0.1:9000"),
+        ("https://s3.example.com:443", "s3.example.com:443"),
+        ("10.0.0.1", "10.0.0.1"),
+        ("10.0.0.1:9000", "10.0.0.1:9000"),
+    ],
+)
+def test_s3_endpoint_scheme_is_stripped(
+    harness,
+    mocked_lightkube_client,
+    mocked_kubernetes_service_patch,
+    mocker,
+    raw_endpoint,
+    expected_endpoint,
+):
+    """Test that URL schemes are stripped from S3 endpoints before passing to Argo.
+
+    Argo's S3 client requires a bare host[:port] endpoint and rejects full URLs
+    such as 'http://10.0.0.1' with "Endpoint url cannot have fully qualified paths".
+    """
+    harness.begin()
+    harness.charm.leadership_gate.get_status = MagicMock(return_value=ActiveStatus())
+
+    mock_s3_component = MagicMock(spec=S3Component)
+    mock_s3_component.get_data.return_value = {
+        **MOCK_S3_DATA_BASE,
+        "endpoint": raw_endpoint,
+    }
+
+    mocker.patch.object(
+        type(harness.charm),
+        "active_storage_component",
+        new_callable=PropertyMock,
+        return_value=mock_s3_component,
+    )
+
+    context = harness.charm._context_callable()
+
+    assert context["s3_minio_endpoint"] == expected_endpoint

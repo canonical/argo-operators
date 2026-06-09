@@ -9,6 +9,7 @@ https://github.com/canonical/argo-operators
 
 import logging
 from base64 import b64encode
+from urllib.parse import urlparse
 
 import lightkube
 from charmed_kubeflow_chisme.components import SdiRelationDataReceiverComponent
@@ -32,6 +33,8 @@ from components.pebble_component import (
     METRICS_PORT,
     ArgoControllerPebbleService,
 )
+from components.s3_component import S3Component
+from components.s3_relations_conflict_detector import S3RelationsConflictDetectorComponent
 
 logger = logging.getLogger(__name__)
 
@@ -85,13 +88,34 @@ class ArgoControllerOperator(CharmBase):
             depends_on=[],
         )
 
+        self.s3_relations_conflict_detector = self.charm_reconciler.add(
+            component=S3RelationsConflictDetectorComponent(
+                charm=self,
+                name="s3-relations-conflict-detector",
+                object_storage_relation_name="object-storage",
+                s3_relation_name="s3-credentials",
+            ),
+            depends_on=[self.leadership_gate],
+        )
+
+        self.s3_relation = self.charm_reconciler.add(
+            component=S3Component(
+                charm=self,
+                name="relation:s3_credentials",
+                relation_name="s3-credentials",
+                is_optional=False,
+            ),
+            depends_on=[self.leadership_gate, self.s3_relations_conflict_detector],
+        )
+
         self.object_storage_relation = self.charm_reconciler.add(
             component=SdiRelationDataReceiverComponent(
                 charm=self,
                 name="relation:object_storage",
                 relation_name="object-storage",
+                minimum_related_applications=0,
             ),
-            depends_on=[self.leadership_gate],
+            depends_on=[self.leadership_gate, self.s3_relations_conflict_detector],
         )
 
         self.kubernetes_resources = self.charm_reconciler.add(
@@ -128,7 +152,7 @@ class ArgoControllerOperator(CharmBase):
             depends_on=[
                 self.leadership_gate,
                 self.kubernetes_resources,
-                self.object_storage_relation,
+                self.s3_relations_conflict_detector,
             ],
         )
 
@@ -136,27 +160,38 @@ class ArgoControllerOperator(CharmBase):
         self._logging = LogForwarder(charm=self)
 
     @property
+    def active_storage_component(self):
+        """Returns the active storage component (S3 or object storage)."""
+        if self.model.get_relation("s3-credentials"):
+            return self.s3_relation.component
+        return self.object_storage_relation.component
+
+    @property
     def _context_callable(self):
-        return lambda: {
-            "app_name": self.app.name,
-            "namespace": self.model.name,
-            "access_key": b64encode(
-                self.object_storage_relation.component.get_data()["access-key"].encode("utf-8")
-            ).decode("utf-8"),
-            "secret_key": b64encode(
-                self.object_storage_relation.component.get_data()["secret-key"].encode("utf-8")
-            ).decode("utf-8"),
-            "mlpipeline_minio_artifact_secret": "mlpipeline-minio-artifact",
-            "argo_controller_configmap": ARGO_CONTROLLER_CONFIGMAP,
-            "s3_bucket": self.model.config["bucket"],
-            "s3_minio_endpoint": (
-                f"{self.object_storage_relation.component.get_data()['service']}."
-                f"{self.object_storage_relation.component.get_data()['namespace']}:"
-                f"{self.object_storage_relation.component.get_data()['port']}"
-            ),
-            "kubelet_insecure": self.model.config["kubelet-insecure"],
-            "key_format": ARGO_KEYFORMAT,
-        }
+        def context():
+            active = self.active_storage_component
+            data = active.get_data()
+            if isinstance(active, S3Component):
+                # Strip any URL scheme (e.g. "http://") — Argo's S3 client expects
+                # just the host[:port], not a full URL.
+                parsed = urlparse(data["endpoint"])
+                endpoint = parsed.netloc if parsed.netloc else parsed.path
+            else:
+                endpoint = f"{data['service']}.{data['namespace']}:{data['port']}"
+            return {
+                "app_name": self.app.name,
+                "namespace": self.model.name,
+                "access_key": b64encode(data["access-key"].encode("utf-8")).decode("utf-8"),
+                "secret_key": b64encode(data["secret-key"].encode("utf-8")).decode("utf-8"),
+                "mlpipeline_minio_artifact_secret": "mlpipeline-minio-artifact",
+                "argo_controller_configmap": ARGO_CONTROLLER_CONFIGMAP,
+                "s3_bucket": data.get("bucket", self.model.config["bucket"]),
+                "s3_minio_endpoint": endpoint,
+                "kubelet_insecure": self.model.config["kubelet-insecure"],
+                "key_format": ARGO_KEYFORMAT,
+            }
+
+        return context
 
 
 if __name__ == "__main__":

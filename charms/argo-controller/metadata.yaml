@@ -19,6 +19,8 @@ containers:
     uid: 584792
     gid: 584792
 requires:
+  s3-credentials:
+    interface: s3
   object-storage:
     interface: object-storage
     schema:
