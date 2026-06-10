@@ -113,6 +113,8 @@ class ArgoControllerOperator(CharmBase):
                 charm=self,
                 name="relation:object_storage",
                 relation_name="object-storage",
+                # Make this relation optional, since a relation with s3-credentials is
+                # also sufficient
                 minimum_related_applications=0,
             ),
             depends_on=[self.leadership_gate, self.s3_relations_conflict_detector],
@@ -177,6 +179,11 @@ class ArgoControllerOperator(CharmBase):
                 parsed = urlparse(data["endpoint"])
                 endpoint = parsed.netloc if parsed.netloc else parsed.path
             else:
+                # When minimum_related_applications != maximum_related_applications,
+                # SdiRelationDataReceiverComponent.get_data() returns a list of dicts
+                # rather than a single dict.  Extract the first (and expected-only) entry.
+                if isinstance(data, list):
+                    data = data[0]
                 endpoint = f"{data['service']}.{data['namespace']}:{data['port']}"
             return {
                 "app_name": self.app.name,

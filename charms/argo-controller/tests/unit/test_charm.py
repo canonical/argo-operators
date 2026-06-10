@@ -96,7 +96,11 @@ def test_object_storage_relation_with_data(
 def test_object_storage_relation_without_data(
     harness, mocked_lightkube_client, mocked_kubernetes_service_patch
 ):
-    """Test that the object storage relation goes Blocked if no data is available."""
+    """Test that the object storage relation is Active when a relation exists but has no data.
+
+    With minimum_related_applications=0 the relation is optional, so even an empty relation
+    does not block the component.
+    """
     # Arrange
     harness.begin()
 
@@ -108,13 +112,17 @@ def test_object_storage_relation_without_data(
     add_sdi_relation_to_harness(harness, "object-storage", data={})
 
     # Assert
-    assert isinstance(harness.charm.object_storage_relation.status, BlockedStatus)
+    assert isinstance(harness.charm.object_storage_relation.status, ActiveStatus)
 
 
 def test_object_storage_relation_without_relation(
     harness, mocked_lightkube_client, mocked_kubernetes_service_patch
 ):
-    """Test that the object storage relation goes Blocked if no relation is established."""
+    """Test that the object storage relation is Active when no relation is established.
+
+    With minimum_related_applications=0 the relation is optional, so the component stays
+    Active even without a relation.
+    """
     # Arrange
     harness.begin()
 
@@ -126,7 +134,7 @@ def test_object_storage_relation_without_relation(
     harness.charm.on.install.emit()
 
     # Assert
-    assert isinstance(harness.charm.object_storage_relation.status, BlockedStatus)
+    assert isinstance(harness.charm.object_storage_relation.status, ActiveStatus)
 
 
 def test_kubernetes_created_method(
