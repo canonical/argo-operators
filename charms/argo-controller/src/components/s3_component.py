@@ -9,10 +9,9 @@ See: https://github.com/canonical/object-storage-integrator/tree/main/s3
 import logging
 from typing import Optional
 
+from charmed_kubeflow_chisme.components.component import Component
 from object_storage import S3Requirer
 from ops import ActiveStatus, BlockedStatus, StatusBase
-
-from charmed_kubeflow_chisme.components.component import Component
 
 logger = logging.getLogger(__name__)
 

@@ -141,6 +141,43 @@ def test_object_storage_relation_without_relation(
     assert isinstance(harness.charm.object_storage_relation.status, ActiveStatus)
 
 
+@pytest.mark.parametrize(
+    "add_s3_credentials, add_object_storage, expected_status",
+    [
+        pytest.param(False, False, BlockedStatus, id="no-relation"),
+        pytest.param(True, False, ActiveStatus, id="s3-credentials-only"),
+        pytest.param(False, True, ActiveStatus, id="object-storage-only"),
+        pytest.param(True, True, BlockedStatus, id="both-relations"),
+    ],
+)
+def test_s3_relations_conflict_detector_status(
+    harness,
+    mocked_lightkube_client,
+    mocked_kubernetes_service_patch,
+    add_s3_credentials,
+    add_object_storage,
+    expected_status,
+):
+    """Test that s3-relations-conflict-detector blocks unless exactly one storage relation is set.
+
+    Exactly one of object-storage or s3-credentials must be present at a time:
+    - none active  → Blocked (too few)
+    - one active   → Active
+    - both active  → Blocked (too many)
+    """
+    harness.begin()
+    harness.charm.leadership_gate.get_status = MagicMock(return_value=ActiveStatus())
+
+    if add_s3_credentials:
+        harness.add_relation("s3-credentials", "s3-provider")
+    if add_object_storage:
+        harness.add_relation("object-storage", "object-storage-provider")
+
+    harness.charm.on.install.emit()
+
+    assert isinstance(harness.charm.s3_relations_conflict_detector.status, expected_status)
+
+
 def test_kubernetes_created_method(
     harness, mocked_lightkube_client, mocked_kubernetes_service_patch
 ):

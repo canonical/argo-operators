@@ -33,8 +33,8 @@ from components.pebble_component import (
     METRICS_PORT,
     ArgoControllerPebbleService,
 )
-from components.s3_component import S3Component
 from components.relation_count_gate_component import RelationCountGateComponent
+from components.s3_component import S3Component
 
 logger = logging.getLogger(__name__)
 
