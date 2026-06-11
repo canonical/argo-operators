@@ -102,7 +102,7 @@ class ArgoControllerOperator(CharmBase):
                 charm=self,
                 name="relation:s3_credentials",
                 relation_name="s3-credentials",
-                is_optional=False,
+                is_optional=True,
             ),
             depends_on=[self.leadership_gate, self.s3_relations_conflict_detector],
         )
