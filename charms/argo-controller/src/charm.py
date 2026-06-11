@@ -34,7 +34,7 @@ from components.pebble_component import (
     ArgoControllerPebbleService,
 )
 from components.s3_component import S3Component
-from components.s3_relations_conflict_detector import S3RelationsConflictDetectorComponent
+from components.relation_count_gate_component import RelationCountGateComponent
 
 logger = logging.getLogger(__name__)
 
@@ -89,11 +89,10 @@ class ArgoControllerOperator(CharmBase):
         )
 
         self.s3_relations_conflict_detector = self.charm_reconciler.add(
-            component=S3RelationsConflictDetectorComponent(
+            component=RelationCountGateComponent(
                 charm=self,
                 name="s3-relations-conflict-detector",
-                object_storage_relation_name="object-storage",
-                s3_relation_name="s3-credentials",
+                relation_names=["object-storage", "s3-credentials"],
             ),
             depends_on=[self.leadership_gate],
         )

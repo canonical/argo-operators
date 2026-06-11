@@ -120,15 +120,19 @@ def test_object_storage_relation_without_relation(
 ):
     """Test that the object storage relation is Active when no relation is established.
 
-    With minimum_related_applications=0 the relation is optional, so the component stays
-    Active even without a relation.
+    The object-storage relation has minimum_related_applications=0, making it optional.
+    The s3-relations-conflict-detector is mocked Active here to isolate this component.
     """
     # Arrange
     harness.begin()
 
     # Mock:
     # * leadership_gate to be active and executed
+    # * s3_relations_conflict_detector to be active (tested separately)
     harness.charm.leadership_gate.get_status = MagicMock(return_value=ActiveStatus())
+    harness.charm.s3_relations_conflict_detector.get_status = MagicMock(
+        return_value=ActiveStatus()
+    )
 
     # Act
     harness.charm.on.install.emit()
@@ -179,9 +183,13 @@ def test_pebble_services_running(
 
     # Mock:
     # * leadership_gate to have get_status=>Active
+    # * s3_relations_conflict_detector to be active (tested separately)
     # * object_storage_relation to return mock data, making the item go active
     # * kubernetes_resources to have get_status=>Active
     harness.charm.leadership_gate.get_status = MagicMock(return_value=ActiveStatus())
+    harness.charm.s3_relations_conflict_detector.get_status = MagicMock(
+        return_value=ActiveStatus()
+    )
     harness.charm.object_storage_relation.component.get_data = MagicMock(
         return_value=MOCK_OBJECT_STORAGE_DATA
     )
