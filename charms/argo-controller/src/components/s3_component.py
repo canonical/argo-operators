@@ -28,7 +28,7 @@ class S3RequirerComponent(Component):
         *args,
         relation_name: str,
         is_optional: bool = False,
-        required_relation_fields: frozenset[str] = frozenset({"access-key", "secret-key"}),
+        required_relation_fields: frozenset[str] = frozenset({"access-key", "secret-key", "endpoint"}),
         **kwargs,
     ):
         """Initialise the component.
@@ -38,7 +38,7 @@ class S3RequirerComponent(Component):
             is_optional: When True, the component is Active even if no relation is present.
             required_relation_fields: Set of databag keys that must all be present for a
                 relation to be considered fully populated. Defaults to the standard S3
-                fields ``{"access-key", "secret-key"}``.
+                fields ``{"access-key", "secret-key", "endpoint"}``.
         """
         super().__init__(*args, **kwargs)
         self.relation_name = relation_name
