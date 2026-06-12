@@ -34,7 +34,7 @@ from components.pebble_component import (
     ArgoControllerPebbleService,
 )
 from components.relation_count_gate_component import RelationCountGateComponent
-from components.s3_component import S3Component
+from components.s3_component import S3RequirerComponent
 
 logger = logging.getLogger(__name__)
 
@@ -98,7 +98,7 @@ class ArgoControllerOperator(CharmBase):
         )
 
         self.s3_relation = self.charm_reconciler.add(
-            component=S3Component(
+            component=S3RequirerComponent(
                 charm=self,
                 name="relation:s3_credentials",
                 relation_name="s3-credentials",
@@ -172,7 +172,10 @@ class ArgoControllerOperator(CharmBase):
         def context():
             active = self.active_storage_component
             data = active.get_data()
-            if isinstance(active, S3Component):
+            if isinstance(active, S3RequirerComponent):
+                # get_data() returns a list; one S3 relation is expected (enforced by the
+                # conflict detector), so we take the first entry.
+                data = active.get_data()[0]
                 # Strip any URL scheme (e.g. "http://") — Argo's S3 client expects
                 # just the host[:port], not a full URL.
                 parsed = urlparse(data["endpoint"])

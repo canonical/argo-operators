@@ -9,7 +9,7 @@ from ops.model import ActiveStatus, BlockedStatus
 from ops.testing import Harness
 
 from charm import ArgoControllerOperator
-from components.s3_component import S3Component
+from components.s3_component import S3RequirerComponent
 
 MOCK_OBJECT_STORAGE_DATA = {
     "access-key": "access-key",
@@ -203,9 +203,12 @@ def test_kubernetes_created_method(
     harness.charm.on.install.emit()
 
     # FIXME: This is a hardcoded count of the Kubernetes objects that should be created.
-    # The `reconcile` function is called twice, once for `object_storage_relation_changed`
-    # and once for `install`, so we expect 2 apply calls for each resource
-    assert mocked_lightkube_client.apply.call_count == 26
+    # `reconcile` is called 3 times (13 resources × 3 = 39):
+    #   - `object_storage_relation_changed` fires once but triggers 2 reconcile cycles because
+    #     both RelationCountGateComponent and SdiRelationDataReceiverComponent observe it
+    #     (CharmReconciler registers them independently without deduplication).
+    #   - `install` triggers a third reconcile cycle.
+    assert mocked_lightkube_client.apply.call_count == 39
     assert isinstance(harness.charm.kubernetes_resources.status, ActiveStatus)
 
 
@@ -271,11 +274,13 @@ def test_s3_endpoint_scheme_is_stripped(
     harness.begin()
     harness.charm.leadership_gate.get_status = MagicMock(return_value=ActiveStatus())
 
-    mock_s3_component = MagicMock(spec=S3Component)
-    mock_s3_component.get_data.return_value = {
-        **MOCK_S3_DATA_BASE,
-        "endpoint": raw_endpoint,
-    }
+    mock_s3_component = MagicMock(spec=S3RequirerComponent)
+    mock_s3_component.get_data.return_value = [
+        {
+            **MOCK_S3_DATA_BASE,
+            "endpoint": raw_endpoint,
+        }
+    ]
 
     mocker.patch.object(
         type(harness.charm),

@@ -59,15 +59,23 @@ class RelationCountGateComponent(Component):
         self.relation_names = relation_names
         self.minimum_related_applications = minimum_related_applications
         self.maximum_related_applications = maximum_related_applications
+        self._events_to_observe = [
+            evt
+            for name in self.relation_names
+            for evt in (
+                self._charm.on[name].relation_changed,
+                self._charm.on[name].relation_broken,
+            )
+        ]
 
     def get_status(self) -> StatusBase:
         """Check that the number of active watched relations is within the configured range."""
         active_relations = [
-            name
-            for name in self.relation_names
-            if self._charm.model.get_relation(name) is not None
+            name for name in self.relation_names if self._charm.model.relations[name]
         ]
-        active_relations_number = len(active_relations)
+        active_relations_number = sum(
+            len(self._charm.model.relations[name]) for name in self.relation_names
+        )
 
         if active_relations_number < self.minimum_related_applications:
             relations_str = ", ".join(f"'{r}'" for r in self.relation_names)
@@ -78,7 +86,6 @@ class RelationCountGateComponent(Component):
             return BlockedStatus(
                 f"Too few relations active: need at least "
                 f"{self.minimum_related_applications} of {relations_str}. "
-                "Add a relation to unblock."
             )
 
         if active_relations_number > self.maximum_related_applications:
