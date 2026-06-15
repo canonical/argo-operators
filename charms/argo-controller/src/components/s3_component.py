@@ -28,7 +28,9 @@ class S3RequirerComponent(Component):
         *args,
         relation_name: str,
         is_optional: bool = False,
-        required_relation_fields: frozenset[str] = frozenset({"access-key", "secret-key", "endpoint"}),
+        required_relation_fields: frozenset[str] = frozenset(
+            {"access-key", "secret-key", "endpoint"}
+        ),
         **kwargs,
     ):
         """Initialise the component.
