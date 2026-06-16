@@ -250,7 +250,7 @@ def create_root_user(host_ip: str, certs_path: Path) -> "S3ConnectionInfo":
     )
 
 
-def setup_microceph(host_ip: str, certs_path: Path) -> "S3ConnectionInfo":
+def setup_microceph() -> "S3ConnectionInfo":
     """Set up microceph, radosgw, account, and root user; return S3 connection info.
 
     If S3_ACCESS_KEY, S3_SECRET_KEY, and S3_ENDPOINT environment variables are
@@ -272,14 +272,16 @@ def setup_microceph(host_ip: str, certs_path: Path) -> "S3ConnectionInfo":
             tls_ca_chain=os.environ.get("S3_TLS_CA", ""),
             region=os.environ.get("S3_REGION", "default"),
         )
+    ip = host_ip()
+    path = certs_path()
     install_microceph()
-    setup_radosgw(host_ip, certs_path)
-    return create_root_user(host_ip, certs_path)
+    setup_radosgw(ip, path)
+    return create_root_user(ip, path)
 
 
 async def deploy_and_assert_s3_integrator(model: Model, add_ca_chain: bool = False):
     """Deploy the s3-integrator charm with configured credentials."""
-    s3_connection_info = setup_microceph(host_ip(), certs_path())
+    s3_connection_info = setup_microceph()
     config = {"endpoint": s3_connection_info.endpoint}
     if add_ca_chain and s3_connection_info.tls_ca_chain:
         config["tls-ca-chain"] = s3_connection_info.tls_ca_chain
