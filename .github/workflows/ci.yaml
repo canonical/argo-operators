@@ -124,6 +124,7 @@ jobs:
     strategy:
       matrix:
         charm: [argo-controller]
+        test-type: [integration, integration-object-storage]
     steps:
       - name: Maximise GH runner space
         uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be
@@ -150,7 +151,7 @@ jobs:
       - name: Build and test
         working-directory: ./charms/${{ matrix.charm }}
         run: |
-          tox -vve integration -- --model testing --charm-path=${{ github.workspace }}/charms/argo-controller/argo-controller_ubuntu@24.04-amd64.charm
+          tox -vve ${{ matrix.test.type }} -- --model testing --charm-path=${{ github.workspace }}/charms/argo-controller/argo-controller_ubuntu@24.04-amd64.charm
 
         # On failure, capture debugging resources
       - name: Get all
