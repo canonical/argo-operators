@@ -151,7 +151,7 @@ jobs:
       - name: Build and test
         working-directory: ./charms/${{ matrix.charm }}
         run: |
-          tox -vve ${{ matrix.test.type }} -- --model testing --charm-path=${{ github.workspace }}/charms/argo-controller/argo-controller_ubuntu@24.04-amd64.charm
+          tox -vve ${{ matrix.test-type }} -- --model testing --charm-path=${{ github.workspace }}/charms/argo-controller/argo-controller_ubuntu@24.04-amd64.charm
 
         # On failure, capture debugging resources
       - name: Get all

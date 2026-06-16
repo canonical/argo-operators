@@ -251,7 +251,7 @@ def create_root_user(host_ip: str, certs_path: Path) -> "S3ConnectionInfo":
 
 
 def setup_microceph(host_ip: str, certs_path: Path) -> "S3ConnectionInfo":
-    """Set up microceph, radosgw, and root user; return S3 connection info.
+    """Set up microceph, radosgw, account, and root user; return S3 connection info.
 
     If S3_ACCESS_KEY, S3_SECRET_KEY, and S3_ENDPOINT environment variables are
     set, the microceph setup is skipped entirely and credentials are taken from
@@ -283,6 +283,7 @@ async def deploy_and_assert_s3_integrator(model: Model, add_ca_chain: bool = Fal
     config = {"endpoint": s3_connection_info.endpoint}
     if add_ca_chain and s3_connection_info.tls_ca_chain:
         config["tls-ca-chain"] = s3_connection_info.tls_ca_chain
+        
     logger.info("Deploying s3-integrator charm with configured credentials...")
     await model.deploy(
         S3_INTEGRATOR.charm,
