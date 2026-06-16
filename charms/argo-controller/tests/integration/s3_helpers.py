@@ -285,7 +285,7 @@ async def deploy_and_assert_s3_integrator(model: Model, add_ca_chain: bool = Fal
     config = {"endpoint": s3_connection_info.endpoint}
     if add_ca_chain and s3_connection_info.tls_ca_chain:
         config["tls-ca-chain"] = s3_connection_info.tls_ca_chain
-        
+
     logger.info("Deploying s3-integrator charm with configured credentials...")
     await model.deploy(
         S3_INTEGRATOR.charm,
