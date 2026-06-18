@@ -176,20 +176,22 @@ class ArgoControllerOperator(CharmBase):
             active = self.active_storage_component
             data = active.get_data()
             if isinstance(active, S3RequirerComponent):
-                # get_data() returns a list; one S3 relation is expected (enforced by the
-                # conflict detector), so we take the first entry.
+                # get_data() returns a list, only one S3 relation is expected,
+                # so take the first entry.
                 data = active.get_data()[0]
-                # Strip any URL scheme (e.g. "http://") — Argo's S3 client expects
+                # Strip any URL scheme (e.g. "http://") since argo's S3 client expects
                 # just the host[:port], not a full URL.
                 parsed = urlparse(data["endpoint"])
                 endpoint = parsed.netloc if parsed.netloc else parsed.path
+                s3_region = data.get("region")
             else:
                 # When minimum_related_applications != maximum_related_applications,
                 # SdiRelationDataReceiverComponent.get_data() returns a list of dicts
-                # rather than a single dict.  Extract the first (and expected-only) entry.
+                # rather than a single dict. Extract the first entry.
                 if isinstance(data, list):
                     data = data[0]
                 endpoint = f"{data['service']}.{data['namespace']}:{data['port']}"
+                s3_region = None
             return {
                 "app_name": self.app.name,
                 "namespace": self.model.name,
@@ -199,6 +201,7 @@ class ArgoControllerOperator(CharmBase):
                 "argo_controller_configmap": ARGO_CONTROLLER_CONFIGMAP,
                 "s3_bucket": data.get("bucket", self.model.config["bucket"]),
                 "s3_minio_endpoint": endpoint,
+                "s3_region": s3_region,
                 "kubelet_insecure": self.model.config["kubelet-insecure"],
                 "key_format": ARGO_KEYFORMAT,
             }

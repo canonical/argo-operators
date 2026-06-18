@@ -24,6 +24,7 @@ MOCK_S3_DATA_BASE = {
     "access-key": "access-key",
     "secret-key": "secret-key",
     "bucket": "mybucket",
+    "region": "us-east-1",
 }
 
 EXPECTED_ENVIRONMENT = {
@@ -292,3 +293,4 @@ def test_s3_endpoint_scheme_is_stripped(
     context = harness.charm._context_callable()
 
     assert context["s3_minio_endpoint"] == expected_endpoint
+    assert context["s3_region"] == MOCK_S3_DATA_BASE["region"]
