@@ -520,14 +520,14 @@ pycparser = {version = "*", markers = "implementation_name != \"PyPy\""}
 
 [[package]]
 name = "charmed-kubeflow-chisme"
-version = "0.4.25"
+version = "0.4.27"
 description = "A collection of helpers for Charms maintained by the Charmed Kubeflow team"
 optional = false
-python-versions = ">=3.6"
+python-versions = ">=3.9"
 groups = ["charm", "integration"]
 files = [
-    {file = "charmed_kubeflow_chisme-0.4.25-py3-none-any.whl", hash = "sha256:573617c273b46727a29307280c917f681290349b7f374e6139a396d67abcc06c"},
-    {file = "charmed_kubeflow_chisme-0.4.25.tar.gz", hash = "sha256:b93a7a725486bb19126930fbb4fdd8784632d6bb81415af87574e4e47f070fa6"},
+    {file = "charmed_kubeflow_chisme-0.4.27-py3-none-any.whl", hash = "sha256:f88cc85241e3baf450da1da04be84ad9cbee6efac63e1f704c5e3f03ccdebd0f"},
+    {file = "charmed_kubeflow_chisme-0.4.27.tar.gz", hash = "sha256:2b1a4c8a4b48daf3040e7cbe351d18ec0361792c57a88408a2523e07b624e023"},
 ]
 
 [package.dependencies]
@@ -540,6 +540,7 @@ juju = "*"
 kubernetes = ">=30.1.0"
 lightkube = ">0.10.0"
 lightkube-extensions = ">=0.3.0"
+object-storage-charmlib = ">=1.0.0"
 ops = ">1.2.0"
 "ruamel.yaml" = "*"
 serialized-data-interface = "*"
@@ -1944,7 +1945,7 @@ version = "1.0.0"
 description = "Common charm lib for providers and requirers of object storage relation interfaces"
 optional = false
 python-versions = ">=3.8"
-groups = ["charm"]
+groups = ["charm", "integration"]
 files = [
     {file = "object_storage_charmlib-1.0.0-py3-none-any.whl", hash = "sha256:17e95686ddeac3dd83dc6f9276d75f967fdd84b5658e3660d6ef1fe72b3ad56e"},
     {file = "object_storage_charmlib-1.0.0.tar.gz", hash = "sha256:7bb853f9d1d14273e8bc603964e8582b93ea635aff0619612f7c8b6bce6da900"},
@@ -3397,4 +3398,4 @@ type = ["pytest-mypy (>=1.0.1) ; platform_python_implementation != \"PyPy\""]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<4.0"
-content-hash = "289405a3493343a5d756821a9fe4e73734ebc84379c7f0e5fa571f343ef3216d"
+content-hash = "98584fd51a603b3bac20d97d7cf92f25304e1a4482840a618a3fcf32cdb13398"

@@ -12,7 +12,11 @@ from base64 import b64encode
 from urllib.parse import urlparse
 
 import lightkube
-from charmed_kubeflow_chisme.components import SdiRelationDataReceiverComponent
+from charmed_kubeflow_chisme.components import (
+    RelationCountGateComponent,
+    S3RequirerComponent,
+    SdiRelationDataReceiverComponent,
+)
 from charmed_kubeflow_chisme.components.charm_reconciler import CharmReconciler
 from charmed_kubeflow_chisme.components.kubernetes_component import KubernetesComponent
 from charmed_kubeflow_chisme.components.leadership_gate_component import LeadershipGateComponent
@@ -33,8 +37,6 @@ from components.pebble_component import (
     METRICS_PORT,
     ArgoControllerPebbleService,
 )
-from components.relation_count_gate_component import RelationCountGateComponent
-from components.s3_component import S3RequirerComponent
 
 logger = logging.getLogger(__name__)
 
@@ -103,6 +105,7 @@ class ArgoControllerOperator(CharmBase):
                 name="relation:s3_credentials",
                 relation_name="s3-credentials",
                 is_optional=True,
+                required_relation_fields=frozenset({"access-key", "secret-key", "endpoint"}),
             ),
             depends_on=[self.leadership_gate, self.s3_relations_conflict_detector],
         )
