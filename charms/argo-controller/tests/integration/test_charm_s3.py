@@ -18,9 +18,9 @@ from charmed_kubeflow_chisme.testing import (
     get_alert_rules,
     get_pod_names,
 )
+from charmed_kubeflow_chisme.testing.s3_integration import deploy_and_assert_s3_integrator
 from charms_dependencies import S3_INTEGRATOR
 from pytest_operator.plugin import OpsTest
-from s3_helpers import deploy_and_assert_s3_integrator
 
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 CONTAINERS_SECURITY_CONTEXT_MAP = generate_container_securitycontext_map(METADATA)
@@ -60,7 +60,7 @@ async def test_build_and_deploy_with_relations(ops_test: OpsTest, request):
     )
 
     # Deploy required relations
-    await deploy_and_assert_s3_integrator(ops_test.model)
+    await deploy_and_assert_s3_integrator(ops_test.model, s3_integrator=S3_INTEGRATOR)
     await ops_test.model.integrate(
         f"{ARGO_CONTROLLER}:s3-credentials", f"{S3_INTEGRATOR.charm}:s3-credentials"
     )
