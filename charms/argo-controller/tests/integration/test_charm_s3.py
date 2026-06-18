@@ -14,11 +14,11 @@ from charmed_kubeflow_chisme.testing import (
     assert_metrics_endpoint,
     assert_security_context,
     deploy_and_assert_grafana_agent,
+    deploy_and_assert_s3_integrator,
     generate_container_securitycontext_map,
     get_alert_rules,
     get_pod_names,
 )
-from charmed_kubeflow_chisme.testing.s3_integration import deploy_and_assert_s3_integrator
 from charms_dependencies import S3_INTEGRATOR
 from pytest_operator.plugin import OpsTest
 
