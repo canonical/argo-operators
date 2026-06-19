@@ -185,6 +185,7 @@ class ArgoControllerOperator(CharmBase):
                 # Strip any URL scheme (e.g. "http://") since argo's S3 client expects
                 # just the host[:port], not a full URL
                 parsed = urlparse(data["endpoint"])
+                # Also allow endpoints without a scheme
                 raw_endpoint = parsed.netloc if parsed.netloc else parsed.path
                 endpoint = raw_endpoint.split("/", 1)[0]
                 s3_region = data.get("region")
