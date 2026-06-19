@@ -4,7 +4,6 @@
 from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
-from charmed_kubeflow_chisme.components import S3RequirerComponent
 from charmed_kubeflow_chisme.testing import add_sdi_relation_to_harness
 from ops.model import ActiveStatus, BlockedStatus
 from ops.testing import Harness
