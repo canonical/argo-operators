@@ -144,6 +144,7 @@ class ArgoControllerOperator(CharmBase):
                 self.leadership_gate,
                 self.s3_relations_conflict_detector,
                 self.object_storage_relation,
+                self.s3_relation,
             ],
         )
 
