@@ -20,6 +20,7 @@ from charmed_kubeflow_chisme.components import (
 from charmed_kubeflow_chisme.components.charm_reconciler import CharmReconciler
 from charmed_kubeflow_chisme.components.kubernetes_component import KubernetesComponent
 from charmed_kubeflow_chisme.components.leadership_gate_component import LeadershipGateComponent
+from charmed_kubeflow_chisme.exceptions import ErrorWithStatus
 from charmed_kubeflow_chisme.kubernetes import create_charm_default_labels
 from charms.grafana_k8s.v0.grafana_dashboard import GrafanaDashboardProvider
 from charms.loki_k8s.v1.loki_push_api import LogForwarder
@@ -176,8 +177,8 @@ class ArgoControllerOperator(CharmBase):
     def _context_callable(self):
         def context():
             active = self.active_storage_component
-            data = active.get_data()
             if isinstance(active, S3RequirerComponent):
+                data = active.get_data()
                 # get_data() returns a list, only one S3 relation is expected,
                 # so take the first entry
                 data = data[0]
@@ -187,6 +188,12 @@ class ArgoControllerOperator(CharmBase):
                 endpoint = parsed.netloc if parsed.netloc else parsed.path
                 s3_region = data.get("region")
             else:
+                # SdiRelationDataReceiverComponent
+                try:
+                    data = active.get_data()
+                except ErrorWithStatus as e:
+                    self.unit.status = e.status
+                    return
                 # When minimum_related_applications != maximum_related_applications,
                 # SdiRelationDataReceiverComponent.get_data() returns a list of dicts
                 # rather than a single dict. Extract the first entry.
