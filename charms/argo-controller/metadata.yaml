@@ -21,8 +21,10 @@ containers:
 requires:
   s3-credentials:
     interface: s3
+    optional: true
   object-storage:
     interface: object-storage
+    optional: true
     schema:
       v1:
         provides:
