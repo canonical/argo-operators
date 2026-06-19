@@ -275,8 +275,8 @@ def test_s3_endpoint_scheme_is_stripped(
     harness.begin()
     harness.charm.leadership_gate.get_status = MagicMock(return_value=ActiveStatus())
 
-    real_s3_component = harness.charm.s3_relation.component
-    real_s3_component.get_data = MagicMock(
+    s3_component = harness.charm.s3_relation.component
+    s3_component.get_data = MagicMock(
         return_value=[
             {
                 **MOCK_S3_DATA_BASE,
@@ -289,7 +289,7 @@ def test_s3_endpoint_scheme_is_stripped(
         type(harness.charm),
         "active_storage_component",
         new_callable=PropertyMock,
-        return_value=real_s3_component,
+        return_value=s3_component,
     )
 
     context = harness.charm._context_callable()

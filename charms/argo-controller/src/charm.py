@@ -142,6 +142,7 @@ class ArgoControllerOperator(CharmBase):
             ),
             depends_on=[
                 self.leadership_gate,
+                self.s3_relations_conflict_detector,
                 self.object_storage_relation,
             ],
         )
@@ -178,7 +179,7 @@ class ArgoControllerOperator(CharmBase):
             if isinstance(active, S3RequirerComponent):
                 # get_data() returns a list, only one S3 relation is expected,
                 # so take the first entry
-                data = active.get_data()[0]
+                data = data[0]
                 # Strip any URL scheme (e.g. "http://") since argo's S3 client expects
                 # just the host[:port], not a full URL
                 parsed = urlparse(data["endpoint"])
@@ -187,7 +188,7 @@ class ArgoControllerOperator(CharmBase):
             else:
                 # When minimum_related_applications != maximum_related_applications,
                 # SdiRelationDataReceiverComponent.get_data() returns a list of dicts
-                # rather than a single dict. Extract the first entry
+                # rather than a single dict. Extract the first entry.
                 if isinstance(data, list):
                     data = data[0]
                 endpoint = f"{data['service']}.{data['namespace']}:{data['port']}"
