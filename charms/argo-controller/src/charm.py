@@ -162,6 +162,8 @@ class ArgoControllerOperator(CharmBase):
                 self.leadership_gate,
                 self.kubernetes_resources,
                 self.s3_relations_conflict_detector,
+                self.object_storage_relation,
+                self.s3_relation,
             ],
         )
 
@@ -170,17 +172,25 @@ class ArgoControllerOperator(CharmBase):
 
     @property
     def active_storage_component(self):
-        """Returns the active storage component (S3 or object storage)."""
+        """Returns the active storage component (S3 or object storage).
+
+        Returns None if neither relation is active, which should not happen in practice
+        since the conflict_detector component requires exactly one to be present.
+        """
         if self.model.get_relation("s3-credentials"):
             return self.s3_relation.component
-        return self.object_storage_relation.component
+        if self.model.get_relation("object-storage"):
+            return self.object_storage_relation.component
+        return None
 
     @property
     def _context_callable(self):
         def context():
-            active = self.active_storage_component
-            if isinstance(active, S3RequirerComponent):
-                data = active.get_data()
+            active_storage_component = self.active_storage_component
+            if active_storage_component is None:
+                return
+            if isinstance(active_storage_component, S3RequirerComponent):
+                data = active_storage_component.get_data()
                 # get_data() returns a list, only one S3 relation is expected,
                 # so take the first entry
                 data = data[0]
@@ -194,7 +204,7 @@ class ArgoControllerOperator(CharmBase):
             else:
                 # SdiRelationDataReceiverComponent
                 try:
-                    data = active.get_data()
+                    data = active_storage_component.get_data()
                 except ErrorWithStatus as e:
                     self.unit.status = e.status
                     return
