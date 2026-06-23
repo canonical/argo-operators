@@ -109,6 +109,7 @@ class ArgoControllerOperator(CharmBase):
                 relation_name="s3-credentials",
                 is_optional=True,
                 required_relation_fields=frozenset({"access-key", "secret-key", "endpoint"}),
+                bucket=self.model.config["bucket"],
             ),
             depends_on=[self.leadership_gate, self.s3_relations_conflict_detector],
         )
