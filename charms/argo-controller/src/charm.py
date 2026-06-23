@@ -96,6 +96,8 @@ class ArgoControllerOperator(CharmBase):
                 charm=self,
                 name="s3-relations-conflict-detector",
                 relation_names=["object-storage", "s3-credentials"],
+                minimum_related_applications=1,
+                maximum_related_applications=1,
             ),
             depends_on=[self.leadership_gate],
         )
