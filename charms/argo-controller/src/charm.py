@@ -209,11 +209,10 @@ class ArgoControllerOperator(CharmBase):
                 except ErrorWithStatus as e:
                     self.unit.status = e.status
                     return
-                # When minimum_related_applications != maximum_related_applications,
-                # SdiRelationDataReceiverComponent.get_data() returns a list of dicts
-                # rather than a single dict. Extract the first entry.
-                if isinstance(data, list):
-                    data = data[0]
+                # get_data() returns a list when minimum_related_applications (0) !=
+                # maximum_related_applications (1). Exactly one entry is expected
+                # since object-storage has limit: 1 in metadata.yaml.
+                data = data[0]
                 endpoint = f"{data['service']}.{data['namespace']}:{data['port']}"
                 s3_region = None
             return {
