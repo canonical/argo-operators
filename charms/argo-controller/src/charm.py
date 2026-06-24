@@ -9,12 +9,18 @@ https://github.com/canonical/argo-operators
 
 import logging
 from base64 import b64encode
+from urllib.parse import urlparse
 
 import lightkube
-from charmed_kubeflow_chisme.components import SdiRelationDataReceiverComponent
+from charmed_kubeflow_chisme.components import (
+    RelationCountGateComponent,
+    S3RequirerComponent,
+    SdiRelationDataReceiverComponent,
+)
 from charmed_kubeflow_chisme.components.charm_reconciler import CharmReconciler
 from charmed_kubeflow_chisme.components.kubernetes_component import KubernetesComponent
 from charmed_kubeflow_chisme.components.leadership_gate_component import LeadershipGateComponent
+from charmed_kubeflow_chisme.exceptions import ErrorWithStatus
 from charmed_kubeflow_chisme.kubernetes import create_charm_default_labels
 from charms.grafana_k8s.v0.grafana_dashboard import GrafanaDashboardProvider
 from charms.loki_k8s.v1.loki_push_api import LogForwarder
@@ -85,13 +91,39 @@ class ArgoControllerOperator(CharmBase):
             depends_on=[],
         )
 
+        self.s3_relations_conflict_detector = self.charm_reconciler.add(
+            component=RelationCountGateComponent(
+                charm=self,
+                name="s3-relations-conflict-detector",
+                relation_names=["object-storage", "s3-credentials"],
+                minimum_related_applications=1,
+                maximum_related_applications=1,
+            ),
+            depends_on=[self.leadership_gate],
+        )
+
+        self.s3_relation = self.charm_reconciler.add(
+            component=S3RequirerComponent(
+                charm=self,
+                name="relation:s3_credentials",
+                relation_name="s3-credentials",
+                is_optional=True,
+                required_relation_fields=frozenset({"access-key", "secret-key", "endpoint"}),
+                bucket=self.model.config["bucket"],
+            ),
+            depends_on=[self.leadership_gate, self.s3_relations_conflict_detector],
+        )
+
         self.object_storage_relation = self.charm_reconciler.add(
             component=SdiRelationDataReceiverComponent(
                 charm=self,
                 name="relation:object_storage",
                 relation_name="object-storage",
+                # Make this relation optional, since a relation with s3-credentials is
+                # also sufficient
+                minimum_related_applications=0,
             ),
-            depends_on=[self.leadership_gate],
+            depends_on=[self.leadership_gate, self.s3_relations_conflict_detector],
         )
 
         self.kubernetes_resources = self.charm_reconciler.add(
@@ -114,7 +146,9 @@ class ArgoControllerOperator(CharmBase):
             ),
             depends_on=[
                 self.leadership_gate,
+                self.s3_relations_conflict_detector,
                 self.object_storage_relation,
+                self.s3_relation,
             ],
         )
 
@@ -128,7 +162,9 @@ class ArgoControllerOperator(CharmBase):
             depends_on=[
                 self.leadership_gate,
                 self.kubernetes_resources,
+                self.s3_relations_conflict_detector,
                 self.object_storage_relation,
+                self.s3_relation,
             ],
         )
 
@@ -136,27 +172,64 @@ class ArgoControllerOperator(CharmBase):
         self._logging = LogForwarder(charm=self)
 
     @property
+    def active_storage_component(self):
+        """Returns the active storage component (S3 or object storage).
+
+        Returns None if neither relation is active, which should not happen in practice
+        since the conflict_detector component requires exactly one to be present.
+        """
+        if self.model.get_relation("s3-credentials"):
+            return self.s3_relation.component
+        if self.model.get_relation("object-storage"):
+            return self.object_storage_relation.component
+        return None
+
+    @property
     def _context_callable(self):
-        return lambda: {
-            "app_name": self.app.name,
-            "namespace": self.model.name,
-            "access_key": b64encode(
-                self.object_storage_relation.component.get_data()["access-key"].encode("utf-8")
-            ).decode("utf-8"),
-            "secret_key": b64encode(
-                self.object_storage_relation.component.get_data()["secret-key"].encode("utf-8")
-            ).decode("utf-8"),
-            "mlpipeline_minio_artifact_secret": "mlpipeline-minio-artifact",
-            "argo_controller_configmap": ARGO_CONTROLLER_CONFIGMAP,
-            "s3_bucket": self.model.config["bucket"],
-            "s3_minio_endpoint": (
-                f"{self.object_storage_relation.component.get_data()['service']}."
-                f"{self.object_storage_relation.component.get_data()['namespace']}:"
-                f"{self.object_storage_relation.component.get_data()['port']}"
-            ),
-            "kubelet_insecure": self.model.config["kubelet-insecure"],
-            "key_format": ARGO_KEYFORMAT,
-        }
+        def context():
+            active_storage_component = self.active_storage_component
+            if active_storage_component is None:
+                return
+            if isinstance(active_storage_component, S3RequirerComponent):
+                data = active_storage_component.get_data()
+                # get_data() returns a list, only one S3 relation is expected,
+                # so take the first entry
+                data = data[0]
+                # Strip any URL scheme (e.g. "http://") since argo's S3 client expects
+                # just the host[:port], not a full URL
+                parsed = urlparse(data["endpoint"])
+                # Also allow endpoints without a scheme
+                raw_endpoint = parsed.netloc if parsed.netloc else parsed.path
+                endpoint = raw_endpoint.split("/", 1)[0]
+                s3_region = data.get("region")
+            else:
+                # SdiRelationDataReceiverComponent
+                try:
+                    data = active_storage_component.get_data()
+                except ErrorWithStatus as e:
+                    self.unit.status = e.status
+                    return
+                # get_data() returns a list when minimum_related_applications (0) !=
+                # maximum_related_applications (1). Exactly one entry is expected
+                # since object-storage has limit: 1 in metadata.yaml.
+                data = data[0]
+                endpoint = f"{data['service']}.{data['namespace']}:{data['port']}"
+                s3_region = None
+            return {
+                "app_name": self.app.name,
+                "namespace": self.model.name,
+                "access_key": b64encode(data["access-key"].encode("utf-8")).decode("utf-8"),
+                "secret_key": b64encode(data["secret-key"].encode("utf-8")).decode("utf-8"),
+                "mlpipeline_minio_artifact_secret": "mlpipeline-minio-artifact",
+                "argo_controller_configmap": ARGO_CONTROLLER_CONFIGMAP,
+                "s3_bucket": data.get("bucket", self.model.config["bucket"]),
+                "s3_minio_endpoint": endpoint,
+                "s3_region": s3_region,
+                "kubelet_insecure": self.model.config["kubelet-insecure"],
+                "key_format": ARGO_KEYFORMAT,
+            }
+
+        return context
 
 
 if __name__ == "__main__":

@@ -14,11 +14,12 @@ from charmed_kubeflow_chisme.testing import (
     assert_metrics_endpoint,
     assert_security_context,
     deploy_and_assert_grafana_agent,
+    deploy_and_assert_s3_integrator,
     generate_container_securitycontext_map,
     get_alert_rules,
     get_pod_names,
 )
-from charms_dependencies import MINIO
+from charms_dependencies import MINIO, S3_INTEGRATOR
 from pytest_operator.plugin import OpsTest
 
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
@@ -152,6 +153,30 @@ async def test_workflow_using_artifacts(ops_test: OpsTest):
     await create_artifact_bucket(ops_test)
 
     # Submit argo workflow using artifacts and wait for it to finish
+    await submit_workflow_using_artifact(ops_test)
+
+
+async def test_remove_object_storage_relation(ops_test: OpsTest):
+    """Test that removing the object-storage relation puts the charm in a blocked state."""
+    await ops_test.juju(
+        "remove-relation",
+        f"{ARGO_CONTROLLER}:object-storage",
+        f"{MINIO.charm}:object-storage",
+    )
+    await ops_test.model.wait_for_idle(apps=[ARGO_CONTROLLER], status="blocked", timeout=60 * 5)
+
+
+async def test_deploy_and_integrate_s3_integrator(ops_test: OpsTest):
+    """Test deploying and integrating with s3-integrator restores the charm to active."""
+    await deploy_and_assert_s3_integrator(ops_test.model, s3_integrator=S3_INTEGRATOR)
+    await ops_test.model.integrate(
+        f"{ARGO_CONTROLLER}:s3-credentials", f"{S3_INTEGRATOR.charm}:s3-credentials"
+    )
+    await ops_test.model.wait_for_idle(apps=[ARGO_CONTROLLER], status="active", timeout=60 * 10)
+
+
+async def test_workflow_after_s3_migration(ops_test: OpsTest):
+    """Test that argo workflows work after switching storage backend to s3-integrator."""
     await submit_workflow_using_artifact(ops_test)
 
 

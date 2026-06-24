@@ -1,7 +1,7 @@
 # Copyright 2023 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 from charmed_kubeflow_chisme.testing import add_sdi_relation_to_harness
@@ -17,6 +17,13 @@ MOCK_OBJECT_STORAGE_DATA = {
     "namespace": "namespace",
     "port": 1234,
     "secure": True,
+}
+
+MOCK_S3_DATA_BASE = {
+    "access-key": "access-key",
+    "secret-key": "secret-key",
+    "bucket": "mybucket",
+    "region": "us-east-1",
 }
 
 EXPECTED_ENVIRONMENT = {
@@ -89,7 +96,11 @@ def test_object_storage_relation_with_data(
 def test_object_storage_relation_without_data(
     harness, mocked_lightkube_client, mocked_kubernetes_service_patch
 ):
-    """Test that the object storage relation goes Blocked if no data is available."""
+    """Test that the object storage relation is Active when a relation exists but has no data.
+
+    With minimum_related_applications=0 the relation is optional, so even an empty relation
+    does not block the component.
+    """
     # Arrange
     harness.begin()
 
@@ -101,25 +112,70 @@ def test_object_storage_relation_without_data(
     add_sdi_relation_to_harness(harness, "object-storage", data={})
 
     # Assert
-    assert isinstance(harness.charm.object_storage_relation.status, BlockedStatus)
+    assert isinstance(harness.charm.object_storage_relation.status, ActiveStatus)
 
 
 def test_object_storage_relation_without_relation(
     harness, mocked_lightkube_client, mocked_kubernetes_service_patch
 ):
-    """Test that the object storage relation goes Blocked if no relation is established."""
+    """Test that the object storage relation is Active when no relation is established.
+
+    The object-storage relation has minimum_related_applications=0, making it optional.
+    The s3-relations-conflict-detector is mocked Active here to isolate this component.
+    """
     # Arrange
     harness.begin()
 
     # Mock:
     # * leadership_gate to be active and executed
+    # * s3_relations_conflict_detector to be active (tested separately)
     harness.charm.leadership_gate.get_status = MagicMock(return_value=ActiveStatus())
+    harness.charm.s3_relations_conflict_detector.get_status = MagicMock(
+        return_value=ActiveStatus()
+    )
 
     # Act
     harness.charm.on.install.emit()
 
     # Assert
-    assert isinstance(harness.charm.object_storage_relation.status, BlockedStatus)
+    assert isinstance(harness.charm.object_storage_relation.status, ActiveStatus)
+
+
+@pytest.mark.parametrize(
+    "add_s3_credentials, add_object_storage, expected_status",
+    [
+        pytest.param(False, False, BlockedStatus, id="no-relation"),
+        pytest.param(True, False, ActiveStatus, id="s3-credentials-only"),
+        pytest.param(False, True, ActiveStatus, id="object-storage-only"),
+        pytest.param(True, True, BlockedStatus, id="both-relations"),
+    ],
+)
+def test_s3_relations_conflict_detector_status(
+    harness,
+    mocked_lightkube_client,
+    mocked_kubernetes_service_patch,
+    add_s3_credentials,
+    add_object_storage,
+    expected_status,
+):
+    """Test that s3-relations-conflict-detector blocks unless exactly one storage relation is set.
+
+    Exactly one of object-storage or s3-credentials must be present at a time:
+    - none active  → Blocked (too few)
+    - one active   → Active
+    - both active  → Blocked (too many)
+    """
+    harness.begin()
+    harness.charm.leadership_gate.get_status = MagicMock(return_value=ActiveStatus())
+
+    if add_s3_credentials:
+        harness.add_relation("s3-credentials", "s3-provider")
+    if add_object_storage:
+        harness.add_relation("object-storage", "object-storage-provider")
+
+    harness.charm.on.install.emit()
+
+    assert isinstance(harness.charm.s3_relations_conflict_detector.status, expected_status)
 
 
 def test_kubernetes_created_method(
@@ -147,9 +203,12 @@ def test_kubernetes_created_method(
     harness.charm.on.install.emit()
 
     # FIXME: This is a hardcoded count of the Kubernetes objects that should be created.
-    # The `reconcile` function is called twice, once for `object_storage_relation_changed`
-    # and once for `install`, so we expect 2 apply calls for each resource
-    assert mocked_lightkube_client.apply.call_count == 26
+    # `reconcile` is called 3 times (13 resources × 3 = 39):
+    #   - `object_storage_relation_changed` fires once but triggers 2 reconcile cycles because
+    #     both RelationCountGateComponent and SdiRelationDataReceiverComponent observe it
+    #     (CharmReconciler registers them independently without deduplication).
+    #   - `install` triggers a third reconcile cycle.
+    assert mocked_lightkube_client.apply.call_count == 39
     assert isinstance(harness.charm.kubernetes_resources.status, ActiveStatus)
 
 
@@ -164,9 +223,13 @@ def test_pebble_services_running(
 
     # Mock:
     # * leadership_gate to have get_status=>Active
+    # * s3_relations_conflict_detector to be active (tested separately)
     # * object_storage_relation to return mock data, making the item go active
     # * kubernetes_resources to have get_status=>Active
     harness.charm.leadership_gate.get_status = MagicMock(return_value=ActiveStatus())
+    harness.charm.s3_relations_conflict_detector.get_status = MagicMock(
+        return_value=ActiveStatus()
+    )
     harness.charm.object_storage_relation.component.get_data = MagicMock(
         return_value=MOCK_OBJECT_STORAGE_DATA
     )
@@ -182,3 +245,53 @@ def test_pebble_services_running(
     # Assert the environment variables that are set from inputs are correctly applied
     environment = container.get_plan().services["argo-controller"].environment
     assert environment == EXPECTED_ENVIRONMENT
+
+
+@pytest.mark.parametrize(
+    "raw_endpoint, expected_endpoint",
+    [
+        ("http://10.0.0.1", "10.0.0.1"),
+        ("https://s3.example.com", "s3.example.com"),
+        ("http://10.0.0.1:9000", "10.0.0.1:9000"),
+        ("https://s3.example.com:443", "s3.example.com:443"),
+        ("10.0.0.1", "10.0.0.1"),
+        ("10.0.0.1:9000", "10.0.0.1:9000"),
+    ],
+)
+def test_s3_endpoint_scheme_is_stripped(
+    harness,
+    mocked_lightkube_client,
+    mocked_kubernetes_service_patch,
+    mocker,
+    raw_endpoint,
+    expected_endpoint,
+):
+    """Test that URL schemes are stripped from S3 endpoints before passing to Argo.
+
+    Argo's S3 client requires a bare host[:port] endpoint and rejects full URLs
+    such as 'http://10.0.0.1' with "Endpoint url cannot have fully qualified paths".
+    """
+    harness.begin()
+    harness.charm.leadership_gate.get_status = MagicMock(return_value=ActiveStatus())
+
+    s3_component = harness.charm.s3_relation.component
+    s3_component.get_data = MagicMock(
+        return_value=[
+            {
+                **MOCK_S3_DATA_BASE,
+                "endpoint": raw_endpoint,
+            }
+        ]
+    )
+
+    mocker.patch.object(
+        type(harness.charm),
+        "active_storage_component",
+        new_callable=PropertyMock,
+        return_value=s3_component,
+    )
+
+    context = harness.charm._context_callable()
+
+    assert context["s3_minio_endpoint"] == expected_endpoint
+    assert context["s3_region"] == MOCK_S3_DATA_BASE["region"]

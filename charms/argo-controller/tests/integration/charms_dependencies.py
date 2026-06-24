@@ -11,3 +11,9 @@ MINIO = CharmSpec(
         "secret-key": "minio-secret-key",
     },
 )
+
+S3_INTEGRATOR = CharmSpec(
+    charm="s3-integrator",
+    channel="2/edge",
+    trust=False,
+)
