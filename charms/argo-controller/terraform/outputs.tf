@@ -11,6 +11,7 @@ output "provides" {
 
 output "requires" {
   value = {
+    s3_credentials = "s3-credentials",
     object_storage = "object-storage",
     logging        = "logging"
   }
