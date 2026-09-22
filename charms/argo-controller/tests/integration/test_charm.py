@@ -21,6 +21,7 @@ METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 CHARM_ROOT = "."
 ARGO_CONTROLLER = "argo-controller"
 ARGO_CONTROLLER_TRUST = True
+MINIO_CLIENT_IMAGE = "quay.io/minio/mc"
 
 
 log = logging.getLogger(__name__)
@@ -66,6 +67,40 @@ async def test_build_and_deploy_with_relations(ops_test: OpsTest, request):
     )
 
 
+async def run_probe_pod(ops_test: OpsTest, pod_name: str, command: str):
+    """Run a one-off pod with `kubectl run` and always delete it afterwards.
+
+    The `--rm` flag only cleans up the pod on a clean attached exit, leaving pods
+    behind on failure paths and causing name collisions on retries/adjacent tests.
+    """
+    kubectl_cmd = (
+        "kubectl",
+        "run",
+        "-i",
+        "--restart=Never",
+        "--command",
+        f"--namespace={ops_test.model_name}",
+        pod_name,
+        f"--image={MINIO_CLIENT_IMAGE}",
+        "--",
+        "sh",
+        "-c",
+        command,
+    )
+    try:
+        return await ops_test.run(*kubectl_cmd)
+    finally:
+        await ops_test.run(
+            "kubectl",
+            f"--namespace={ops_test.model_name}",
+            "delete",
+            "pod",
+            pod_name,
+            "--ignore-not-found",
+            "--wait=false",
+        )
+
+
 async def create_artifact_bucket(ops_test: OpsTest):
     # Ensure bucket is available
     model_name = ops_test.model_name
@@ -79,23 +114,8 @@ async def create_artifact_bucket(ops_test: OpsTest):
         f"mc alias set {alias} {url} {MINIO.config['access-key']} {MINIO.config['secret-key']}"  # noqa
         f"&& mc mb {alias}/{bucket} -p"
     )
-    kubectl_cmd = (
-        "kubectl",
-        "run",
-        "--rm",
-        "-i",
-        "--restart=Never",
-        "--command",
-        f"--namespace={ops_test.model_name}",
-        "minio-deployment-test",
-        "--image=minio/mc",
-        "--",
-        "sh",
-        "-c",
-        minio_cmd,
-    )
 
-    ret_code, stdout, stderr = await ops_test.run(*kubectl_cmd)
+    ret_code, stdout, stderr = await run_probe_pod(ops_test, "minio-deployment-test", minio_cmd)
     assert ret_code == 0, (
         f"kubectl command to create argo bucket returned code {ret_code} with "
         f"stdout:\n{stdout}\nstderr:\n{stderr}"
