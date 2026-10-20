@@ -26,7 +26,7 @@ CONTAINERS_SECURITY_CONTEXT_MAP = generate_container_securitycontext_map(METADAT
 CHARM_ROOT = "."
 ARGO_CONTROLLER = METADATA["name"]
 ARGO_CONTROLLER_TRUST = True
-MINIO_CLIENT_IMAGE = "quay.io/minio/mc"
+MINIO_CLIENT_IMAGE = "cgr.dev/chainguard/minio-client:latest-dev"
 
 
 log = logging.getLogger(__name__)
