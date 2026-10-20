@@ -21,7 +21,7 @@ METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 CHARM_ROOT = "."
 ARGO_CONTROLLER = "argo-controller"
 ARGO_CONTROLLER_TRUST = True
-MINIO_CLIENT_IMAGE = "quay.io/minio/mc"
+MINIO_CLIENT_IMAGE = "cgr.dev/chainguard/minio-client:latest-dev"
 
 
 log = logging.getLogger(__name__)
