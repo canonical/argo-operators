@@ -4,11 +4,13 @@
 from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
+import yaml
 from charmed_kubeflow_chisme.testing import add_sdi_relation_to_harness
 from ops.model import ActiveStatus, BlockedStatus
 from ops.testing import Harness
 
 from charm import ArgoControllerOperator
+from components.pebble_component import ARGO_CONTROLLER_CONFIGMAP
 
 MOCK_OBJECT_STORAGE_DATA = {
     "access-key": "access-key",
@@ -29,6 +31,9 @@ MOCK_S3_DATA_BASE = {
 EXPECTED_ENVIRONMENT = {
     "ARGO_NAMESPACE": "namespace",
     "LEADER_ELECTION_IDENTITY": "argo-controller",
+    "TRANSIENT_ERROR_PATTERN": (
+        "(?i)(imminent node shutdown|node is shutting down|preempt|evict|spot|pod deleted)"
+    ),
 }
 
 
@@ -210,6 +215,43 @@ def test_kubernetes_created_method(
     #   - `install` triggers a third reconcile cycle.
     assert mocked_lightkube_client.apply.call_count == 39
     assert isinstance(harness.charm.kubernetes_resources.status, ActiveStatus)
+
+
+def test_configmap_workflow_defaults(
+    harness, mocked_lightkube_client, mocked_kubernetes_service_patch
+):
+    """Test that the controller configmap sets the upstream workflow TTL and retry defaults."""
+    harness.set_leader(True)
+    harness.begin()
+    harness.charm.leadership_gate.get_status = MagicMock(return_value=ActiveStatus())
+    add_sdi_relation_to_harness(harness, "object-storage", data=MOCK_OBJECT_STORAGE_DATA)
+    harness.charm.kubernetes_resources.component._get_missing_kubernetes_resources = MagicMock(
+        return_value=[]
+    )
+
+    harness.charm.on.install.emit()
+
+    applied = [
+        call.kwargs.get("obj", call.args[0] if call.args else None)
+        for call in mocked_lightkube_client.apply.call_args_list
+    ]
+    configmaps = [
+        obj
+        for obj in applied
+        if obj.kind == "ConfigMap" and obj.metadata.name == ARGO_CONTROLLER_CONFIGMAP
+    ]
+    assert configmaps
+    workflow_defaults = yaml.safe_load(configmaps[-1].data["workflowDefaults"])
+    assert workflow_defaults == {
+        "spec": {
+            "ttlStrategy": {
+                "secondsAfterCompletion": 3600,
+                "secondsAfterSuccess": 3600,
+                "secondsAfterFailure": 3600,
+            },
+            "templateDefaults": {"retryStrategy": {"limit": "2", "retryPolicy": "OnError"}},
+        }
+    }
 
 
 def test_pebble_services_running(

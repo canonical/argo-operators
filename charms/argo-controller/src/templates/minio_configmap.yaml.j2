@@ -22,6 +22,16 @@ data:
     imagePullPolicy: IfNotPresent
   metricsConfig: |
     secure: false
+  workflowDefaults: |
+    spec:
+      ttlStrategy:
+        secondsAfterCompletion: 3600
+        secondsAfterSuccess: 3600
+        secondsAfterFailure: 3600
+      templateDefaults:
+        retryStrategy:
+          limit: '2'
+          retryPolicy: OnError
 kind: ConfigMap
 metadata:
   labels:
