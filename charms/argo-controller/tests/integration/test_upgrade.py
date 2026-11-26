@@ -42,7 +42,7 @@ WORKFLOWS = {}
 
 @pytest.fixture(scope="module")
 def juju(request: pytest.FixtureRequest):
-    """Use the model given by --model (created if missing) or a temporary one."""
+    """Use the model given by --model (created if missing, never destroyed) or a temporary one."""
     model = request.config.getoption("--model")
     keep = bool(request.config.getoption("--keep-models"))
     if model:
@@ -53,8 +53,6 @@ def juju(request: pytest.FixtureRequest):
             juju = jubilant.Juju(model=model)
         yield juju
         _dump_debug_log(request, juju)
-        if not keep:
-            juju.destroy_model(model, destroy_storage=True, force=True)
     else:
         with jubilant.temp_model(keep=keep) as juju:
             yield juju
