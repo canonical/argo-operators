@@ -20,6 +20,9 @@ from charmed_kubeflow_chisme.testing import (
     get_pod_names,
 )
 from charms_dependencies import MINIO, S3_INTEGRATOR
+from lightkube.models.meta_v1 import ObjectMeta
+from lightkube.models.rbac_v1 import PolicyRule, RoleRef, Subject
+from lightkube.resources.rbac_authorization_v1 import Role, RoleBinding
 from pytest_operator.plugin import OpsTest
 
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
@@ -135,6 +138,35 @@ async def create_artifact_bucket(ops_test: OpsTest):
     )
 
 
+def grant_executor_rbac(client: lightkube.Client, namespace: str):
+    """Allow the workflow's service account to report step outputs.
+
+    See https://argo-workflows.readthedocs.io/en/latest/workflow-rbac/
+    """
+    metadata = ObjectMeta(name="argo-executor", namespace=namespace)
+    client.apply(
+        Role(
+            metadata=metadata,
+            rules=[
+                PolicyRule(
+                    apiGroups=["argoproj.io"],
+                    resources=["workflowtaskresults"],
+                    verbs=["create", "patch"],
+                )
+            ],
+        )
+    )
+    client.apply(
+        RoleBinding(
+            metadata=metadata,
+            roleRef=RoleRef(
+                apiGroup="rbac.authorization.k8s.io", kind="Role", name="argo-executor"
+            ),
+            subjects=[Subject(kind="ServiceAccount", name="default", namespace=namespace)],
+        )
+    )
+
+
 async def submit_workflow_using_artifact(ops_test: OpsTest):
     kubectl_cmd = (
         "kubectl",
@@ -158,8 +190,8 @@ async def submit_workflow_using_artifact(ops_test: OpsTest):
         f"--namespace={ops_test.model_name}",
         "wait",
         workflow_name,
-        "--for=condition=Completed",
-        "--timeout=120s",
+        "--for=jsonpath={.status.phase}=Succeeded",
+        "--timeout=300s",
     )
     ret_code, stdout, stderr = await ops_test.run(*kubectl_wait_cmd)
     assert ret_code == 0, (
@@ -168,9 +200,10 @@ async def submit_workflow_using_artifact(ops_test: OpsTest):
     )
 
 
-async def test_workflow_using_artifacts(ops_test: OpsTest):
+async def test_workflow_using_artifacts(ops_test: OpsTest, lightkube_client: lightkube.Client):
     # Argo will fail if the artifact bucket it uses does not exist
     await create_artifact_bucket(ops_test)
+    grant_executor_rbac(lightkube_client, ops_test.model_name)
 
     # Submit argo workflow using artifacts and wait for it to finish
     await submit_workflow_using_artifact(ops_test)

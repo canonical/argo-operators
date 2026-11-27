@@ -1,0 +1,37 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: long-running-
+spec:
+  entrypoint: main
+  templates:
+  - name: main
+    steps:
+    - - name: generate-artifact
+        template: sleep-and-write
+    - - name: consume-artifact
+        template: print-message
+        arguments:
+          artifacts:
+          - name: message
+            from: "{{steps.generate-artifact.outputs.artifacts.message}}"
+
+  - name: sleep-and-write
+    container:
+      image: alpine:latest
+      command: [sh, -c]
+      args: ["sleep 120; echo hello > /tmp/message.txt"]
+    outputs:
+      artifacts:
+      - name: message
+        path: /tmp/message.txt
+
+  - name: print-message
+    inputs:
+      artifacts:
+      - name: message
+        path: /tmp/message
+    container:
+      image: alpine:latest
+      command: [sh, -c]
+      args: ["cat /tmp/message"]

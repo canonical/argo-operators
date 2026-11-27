@@ -22,6 +22,10 @@ LIVENESS_PROBE_PORT = "6060"
 METRICS_PORT = "9090"
 LIVENESS_PROBE_PATH = "/healthz"
 LIVENESS_PROBE_NAME = "argo-controller-up"
+# Treat node shutdown/preemption/eviction pod failures as retryable errors (upstream default)
+TRANSIENT_ERROR_PATTERN = (
+    "(?i)(imminent node shutdown|node is shutting down|preempt|evict|spot|pod deleted)"
+)
 
 
 class ArgoControllerPebbleService(PebbleServiceComponent):
@@ -36,6 +40,7 @@ class ArgoControllerPebbleService(PebbleServiceComponent):
         self.environment = {
             "ARGO_NAMESPACE": self.model.name,
             "LEADER_ELECTION_IDENTITY": self.model.app.name,
+            "TRANSIENT_ERROR_PATTERN": TRANSIENT_ERROR_PATTERN,
         }
 
     def get_layer(self) -> Layer:
